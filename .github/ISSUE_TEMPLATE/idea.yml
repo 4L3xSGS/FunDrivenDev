@@ -1,0 +1,21 @@
+name: Propor um jogo ou melhoria
+description: Traga uma mecânica ou uma experiência para explorarmos.
+title: "[Ideia] "
+body:
+  - type: textarea
+    id: experience
+    attributes:
+      label: Qual é a ideia?
+      description: Explique a experiência e o que a torna divertida.
+    validations:
+      required: true
+  - type: textarea
+    id: rules
+    attributes:
+      label: Regras e controles
+      description: Como jogar e o que define vitória, derrota ou conclusão?
+  - type: textarea
+    id: scope
+    attributes:
+      label: Primeira versão
+      description: Qual é a menor versão que permite experimentar essa ideia?

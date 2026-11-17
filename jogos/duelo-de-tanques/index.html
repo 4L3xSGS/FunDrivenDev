@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Duelo de Tanques</title>
+<style>
+*{box-sizing:border-box}body{margin:0;background:#10151b;color:#e7eee8;font-family:system-ui;display:grid;place-items:center;min-height:100svh;padding:18px}main{width:min(850px,100%)}h1{margin:0;font-size:clamp(26px,5vw,42px)}p{color:#a6b4b0;line-height:1.5}.bar{display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;align-items:center;margin:18px 0}.badge{padding:10px 14px;background:#1e2930;border-radius:10px}canvas{display:block;width:100%;background:#202c29;border:2px solid #53624e;border-radius:14px}button{border:0;border-radius:9px;background:#dcf28b;color:#172214;padding:12px 18px;font:700 15px system-ui;cursor:pointer}button:hover{filter:brightness(1.1)}#status{font-weight:700;color:#dcf28b}footer{font-size:13px;color:#93a29d;margin-top:12px}
+</style>
+<main><h1>Duelo de Tanques</h1><p>Dois tanques. Direções aleatórias. Um único sobrevivente.</p>
+<div class="bar"><span class="badge" style="color:#69d8ff">● Tanque Azul</span><span id="clock">Próximo disparo: 3,0 s</span><span class="badge" style="color:#ff9a72">● Tanque Laranja</span></div>
+<canvas id="arena" width="800" height="500" aria-label="Arena automática com dois tanques"></canvas>
+<div class="bar"><span id="status" role="status" aria-live="polite">Partida em andamento</span><div><button id="pause">Pausar</button> <button id="restart">Nova partida</button></div></div>
+<footer>Movimento e mira independentes • Tiros desaparecem nas bordas • Um acerto encerra a partida</footer></main>
+<script>
+const canvas=document.querySelector('canvas'),ctx=canvas.getContext('2d');
+const status=document.querySelector('#status'),clock=document.querySelector('#clock');
+const pause=document.querySelector('#pause');
+const W=800,H=500,R=20,TAU=Math.PI*2;
+let tanks,bullets,particles,time,nextShot,over,paused,last;
+const randomAngle=()=>Math.random()*TAU;
+function reset(){
+ tanks=[
+ {x:145,y:250,a:randomAngle(),turret:0,color:'#69d8ff',name:'Azul',turn:0},
+ {x:655,y:250,a:randomAngle(),turret:Math.PI,color:'#ff9a72',name:'Laranja',turn:0}
+ ];
+ bullets=[];particles=[];time=0;nextShot=3;over=false;paused=false;
+ status.textContent='Partida em andamento';pause.textContent='Pausar';pause.disabled=false;
+ last=performance.now();draw();
+}
+function fire(t,i){
+ const a=randomAngle();t.turret=a;
+ bullets.push({x:t.x+Math.cos(a)*29,y:t.y+Math.sin(a)*29,vx:Math.cos(a)*260,vy:Math.sin(a)*260,owner:i});
+}
+function hitFraction(b,dt,t){
+ const dx=b.vx*dt,dy=b.vy*dt,ox=b.x-t.x,oy=b.y-t.y;
+ const A=dx*dx+dy*dy,B=2*(ox*dx+oy*dy),C=ox*ox+oy*oy-(R+4)**2;
+ if(C<=0)return 0;if(!A)return Infinity;
+ const d=B*B-4*A*C;if(d<0)return Infinity;
+ const s=(-B-Math.sqrt(d))/(2*A);return s>=0&&s<=1?s:Infinity;
+}
+function update(dt){
+ if(paused||over)return;time+=dt;
+ tanks.forEach(t=>{
+ t.turn-=dt;if(t.turn<=0){t.a=randomAngle();t.turn=.5+Math.random()*1.5}
+ t.x+=Math.cos(t.a)*75*dt;t.y+=Math.sin(t.a)*75*dt;
+ if(t.x<R||t.x>W-R){t.x=Math.max(R,Math.min(W-R,t.x));t.a=Math.PI-t.a}
+ if(t.y<R||t.y>H-R){t.y=Math.max(R,Math.min(H-R,t.y));t.a=-t.a}
+ });
+ let dx=tanks[1].x-tanks[0].x,dy=tanks[1].y-tanks[0].y,distance=Math.hypot(dx,dy);
+ if(distance<2*R){
+ const nx=distance?dx/distance:1,ny=distance?dy/distance:0,push=(2*R-distance)/2;
+ tanks.forEach((t,i)=>{const sign=i?1:-1;
+ t.x=Math.max(R,Math.min(W-R,t.x+sign*nx*push));
+ t.y=Math.max(R,Math.min(H-R,t.y+sign*ny*push));t.a=randomAngle()});
+ }
+ while(time>=nextShot){tanks.forEach(fire);nextShot+=3}
+ let earliest=Infinity,losers=new Set();
+ bullets.forEach(b=>{
+ const fraction=hitFraction(b,dt,tanks[1-b.owner]);
+ if(fraction<earliest-1e-8){earliest=fraction;losers=new Set([1-b.owner])}
+ else if(Number.isFinite(fraction)&&Math.abs(fraction-earliest)<1e-8)losers.add(1-b.owner);
+ });
+ if(Number.isFinite(earliest)){
+ over=true;losers.forEach(i=>{
+ const t=tanks[i];t.destroyed=true;
+ for(let n=0;n<55;n++){const a=randomAngle(),v=40+Math.random()*180;
+ particles.push({x:t.x,y:t.y,vx:Math.cos(a)*v,vy:Math.sin(a)*v,life:.6+Math.random()*.6})}
+ });
+ status.textContent=losers.size===2?'Empate! Acertos simultâneos.':
+ 'Tanque '+tanks[1-[...losers][0]].name+' venceu!';
+ pause.disabled=true;return;
+ }
+ bullets.forEach(b=>{b.x+=b.vx*dt;b.y+=b.vy*dt});
+ bullets=bullets.filter(b=>b.x>=0&&b.x<=W&&b.y>=0&&b.y<=H);
+}
+function tank(t){
+ ctx.save();ctx.translate(t.x,t.y);ctx.rotate(t.a);
+ ctx.fillStyle=t.destroyed?'#303333':'#101b1d';
+ ctx.fillRect(-22,-21,44,11);ctx.fillRect(-22,10,44,11);
+ ctx.strokeStyle='#53615e';ctx.lineWidth=2;
+ for(let x=-17;x<22;x+=8){ctx.beginPath();ctx.moveTo(x,-20);ctx.lineTo(x,-11);ctx.moveTo(x,11);ctx.lineTo(x,20);ctx.stroke()}
+ ctx.fillStyle=t.destroyed?'#50504a':t.color;ctx.fillRect(-19,-13,38,26);
+ ctx.fillStyle='#0003';ctx.fillRect(-15,-9,9,18);ctx.restore();
+ ctx.save();ctx.translate(t.x,t.y);ctx.rotate(t.turret);
+ ctx.fillStyle=t.destroyed?'#666456':t.color;ctx.fillRect(0,-4,32,8);
+ ctx.beginPath();ctx.arc(0,0,11,0,TAU);ctx.fill();
+ ctx.fillStyle='#0004';ctx.beginPath();ctx.arc(-2,-2,5,0,TAU);ctx.fill();ctx.restore();
+}
+function draw(){
+ ctx.clearRect(0,0,W,H);ctx.strokeStyle='#ffffff06';ctx.lineWidth=1;
+ for(let x=0;x<W;x+=40){ctx.beginPath();ctx.moveTo(x,0);ctx.lineTo(x,H);ctx.stroke()}
+ for(let y=0;y<H;y+=40){ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(W,y);ctx.stroke()}
+ ctx.strokeStyle='#81937033';ctx.setLineDash([6,10]);ctx.strokeRect(12,12,W-24,H-24);ctx.setLineDash([]);
+ tanks.forEach(tank);
+ bullets.forEach(b=>{ctx.fillStyle='#fff0ac';ctx.shadowColor='#ffcc55';ctx.shadowBlur=12;
+ ctx.beginPath();ctx.arc(b.x,b.y,4,0,TAU);ctx.fill();ctx.shadowBlur=0});
+ particles.forEach(p=>{ctx.globalAlpha=Math.min(1,p.life);ctx.fillStyle=p.life>.5?'#ffd86b':'#ed7445';ctx.fillRect(p.x-3,p.y-3,6,6)});
+ ctx.globalAlpha=1;
+ clock.textContent=over?'Partida encerrada':'Próximo disparo: '+Math.max(0,nextShot-time).toFixed(1).replace('.',',')+' s';
+}
+function loop(now){
+ const dt=Math.min((now-last)/1000,.05);last=now;update(dt);
+ if(!paused){particles.forEach(p=>{p.x+=p.vx*dt;p.y+=p.vy*dt;p.life-=dt});particles=particles.filter(p=>p.life>0)}
+ draw();requestAnimationFrame(loop);
+}
+pause.onclick=()=>{if(over)return;paused=!paused;pause.textContent=paused?'Continuar':'Pausar';status.textContent=paused?'Partida pausada':'Partida em andamento'};
+document.querySelector('#restart').onclick=reset;
+document.addEventListener('visibilitychange',()=>{if(document.hidden&&!over&&!paused)pause.click();last=performance.now()});
+reset();requestAnimationFrame(loop);
+</script></html>

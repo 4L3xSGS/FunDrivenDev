@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1280" height="400" viewBox="0 0 1280 400" role="img" aria-labelledby="title desc">
+<title id="title">FunDrivenDev</title><desc id="desc">Laboratório de jogos de Alexander. Ideias em movimento, diversão em código.</desc>
+<defs><linearGradient id="bg" x2="1" y2="1"><stop stop-color="#101427"/><stop offset="1" stop-color="#162c37"/></linearGradient><linearGradient id="accent"><stop stop-color="#c2ff6b"/><stop offset="1" stop-color="#49e8cd"/></linearGradient><pattern id="grid" width="40" height="40" patternUnits="userSpaceOnUse"><path d="M40 0H0V40" fill="none" stroke="#fff" stroke-opacity=".04"/></pattern></defs>
+<rect width="1280" height="400" rx="24" fill="url(#bg)"/><rect width="1280" height="400" rx="24" fill="url(#grid)"/>
+<path d="M0 360H1280" stroke="#baff70" stroke-opacity=".15"/>
+<rect x="64" y="56" width="240" height="30" rx="15" fill="#c2ff6b" fill-opacity=".1"/>
+<circle cx="84" cy="71" r="4" fill="#c2ff6b"/>
+<text x="99" y="76" font-family="monospace" font-size="12" letter-spacing="2" fill="#c2ff6b">PLAY. BUILD. ITERATE.</text>
+<text x="60" y="171" font-family="Arial,sans-serif" font-weight="800" font-size="75" letter-spacing="-3" fill="#f2f7ff">Fun<tspan fill="#c2ff6b">Driven</tspan>Dev</text>
+<text x="65" y="224" font-family="Arial,sans-serif" font-size="25" fill="#b2c0d3">Ideias em movimento. Diversão em código.</text>
+<text x="65" y="313" font-family="monospace" font-size="13" letter-spacing="2" fill="#7e93a8">UM LABORATÓRIO DE JOGOS POR ALEXANDER</text>
+<g transform="translate(930 192) rotate(-12)"><circle r="130" fill="none" stroke="#61e6ce" stroke-opacity=".16"/><circle r="104" fill="none" stroke="#61e6ce" stroke-opacity=".08"/>
+<path d="M-67-47Q-90-45-94-18L-108 49Q-111 73-90 76Q-79 77-67 63L-40 34H40L67 63Q80 77 93 76Q113 72 108 49L94-18Q90-45 67-47Z" fill="#172838" stroke="url(#accent)" stroke-width="3"/>
+<path d="M-54-17V17M-71 0H-37" stroke="#c2ff6b" stroke-width="10" stroke-linecap="round"/>
+<circle cx="54" cy="-9" r="8" fill="#49e8cd"/><circle cx="74" cy="12" r="8" fill="#c2ff6b"/>
+<rect x="-15" y="7" width="12" height="5" rx="2" fill="#8397af"/><rect x="6" y="7" width="12" height="5" rx="2" fill="#8397af"/>
+</g><rect x="1150" y="60" width="12" height="12" fill="#c2ff6b"/><rect x="1170" y="80" width="8" height="8" fill="#49e8cd"/>
+</svg>

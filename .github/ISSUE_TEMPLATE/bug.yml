@@ -1,0 +1,25 @@
+name: Relatar uma falha
+description: Algo não funcionou como esperado em um jogo.
+title: "[Bug] "
+body:
+  - type: input
+    id: game
+    attributes:
+      label: Jogo
+      placeholder: Duelo de Tanques
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Como reproduzir
+      description: Informe os passos, o resultado observado e o esperado.
+    validations:
+      required: true
+  - type: input
+    id: environment
+    attributes:
+      label: Dispositivo e navegador
+      placeholder: Android / Chrome, Windows / Firefox...
+    validations:
+      required: true
