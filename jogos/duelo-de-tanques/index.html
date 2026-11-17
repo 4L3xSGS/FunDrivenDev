@@ -4,18 +4,18 @@
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Duelo de Tanques</title>
 <style>
-*{box-sizing:border-box}body{margin:0;background:#10151b;color:#e7eee8;font-family:system-ui;display:grid;place-items:center;min-height:100svh;padding:18px}main{width:min(850px,100%)}h1{margin:0;font-size:clamp(26px,5vw,42px)}p{color:#a6b4b0;line-height:1.5}.bar{display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;align-items:center;margin:18px 0}.badge{padding:10px 14px;background:#1e2930;border-radius:10px}canvas{display:block;width:100%;background:#202c29;border:2px solid #53624e;border-radius:14px}button{border:0;border-radius:9px;background:#dcf28b;color:#172214;padding:12px 18px;font:700 15px system-ui;cursor:pointer}button:hover{filter:brightness(1.1)}#status{font-weight:700;color:#dcf28b}footer{font-size:13px;color:#93a29d;margin-top:12px}
+*{box-sizing:border-box}body{margin:0;background:radial-gradient(ellipse at top,#253b30,#101b19 75%);color:#e7eee8;font-family:system-ui;display:grid;place-items:center;min-height:100svh;padding:18px}main{width:min(850px,100%)}h1{margin:0;font-size:clamp(26px,5vw,42px)}p{color:#a6b4b0;line-height:1.5}.bar{display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;align-items:center;margin:18px 0}.badge{padding:10px 14px;background:#1e2930;border-radius:10px}canvas{display:block;width:100%;background:#567344;border:2px solid #8b9b62;box-shadow:0 24px 70px #0006;border-radius:14px}button{border:0;border-radius:9px;background:#dcf28b;color:#172214;padding:12px 18px;font:700 15px system-ui;cursor:pointer}button:focus-visible{outline:3px solid #69d8ff;outline-offset:4px}button:hover{filter:brightness(1.1)}#status{font-weight:700;color:#dcf28b}footer{font-size:13px;color:#93a29d;margin-top:12px}
 </style>
-<main><h1>Duelo de Tanques</h1><p>Dois tanques. Direções aleatórias. Um único sobrevivente.</p>
-<div class="bar"><span class="badge" style="color:#69d8ff">● Tanque Azul</span><span id="clock">Próximo disparo: 3,0 s</span><span class="badge" style="color:#ff9a72">● Tanque Laranja</span></div>
-<canvas id="arena" width="800" height="500" aria-label="Arena automática com dois tanques"></canvas>
+<main><h1>Duelo de Tanques</h1><p>Operação Riacho • Dois tanques. Um único sobrevivente.</p>
+<div class="bar"><span class="badge" style="color:#69d8ff">● Tanque Azul</span><span id="clock">Próximo disparo: 1,5 s</span><span class="badge" style="color:#ff9a72">● Tanque Laranja</span></div>
+<canvas id="arena" width="800" height="500" aria-label="Arena de dois tanques com gramado, árvores e riacho atravessável"></canvas>
 <div class="bar"><span id="status" role="status" aria-live="polite">Partida em andamento</span><div><button id="pause">Pausar</button> <button id="restart">Nova partida</button></div></div>
-<footer>Movimento e mira independentes • Tiros desaparecem nas bordas • Um acerto encerra a partida</footer></main>
+<footer>Disparos a cada 1,5 s • Árvores e riacho cenográficos, sem bloquear tanques ou tiros</footer></main>
 <script>
 const canvas=document.querySelector('canvas'),ctx=canvas.getContext('2d');
 const status=document.querySelector('#status'),clock=document.querySelector('#clock');
 const pause=document.querySelector('#pause');
-const W=800,H=500,R=20,TAU=Math.PI*2;
+const W=800,H=500,R=20,TAU=Math.PI*2,SHOT_INTERVAL=1.5;
 let tanks,bullets,particles,time,nextShot,over,paused,last;
 const randomAngle=()=>Math.random()*TAU;
 function reset(){
@@ -23,7 +23,7 @@ function reset(){
  {x:145,y:250,a:randomAngle(),turret:0,color:'#69d8ff',name:'Azul',turn:0},
  {x:655,y:250,a:randomAngle(),turret:Math.PI,color:'#ff9a72',name:'Laranja',turn:0}
  ];
- bullets=[];particles=[];time=0;nextShot=3;over=false;paused=false;
+ bullets=[];particles=[];time=0;nextShot=SHOT_INTERVAL;over=false;paused=false;
  status.textContent='Partida em andamento';pause.textContent='Pausar';pause.disabled=false;
  last=performance.now();draw();
 }
@@ -53,7 +53,7 @@ function update(dt){
  t.x=Math.max(R,Math.min(W-R,t.x+sign*nx*push));
  t.y=Math.max(R,Math.min(H-R,t.y+sign*ny*push));t.a=randomAngle()});
  }
- while(time>=nextShot){tanks.forEach(fire);nextShot+=3}
+ while(time>=nextShot){tanks.forEach(fire);nextShot+=SHOT_INTERVAL}
  let earliest=Infinity,losers=new Set();
  bullets.forEach(b=>{
  const fraction=hitFraction(b,dt,tanks[1-b.owner]);
@@ -86,11 +86,64 @@ function tank(t){
  ctx.beginPath();ctx.arc(0,0,11,0,TAU);ctx.fill();
  ctx.fillStyle='#0004';ctx.beginPath();ctx.arc(-2,-2,5,0,TAU);ctx.fill();ctx.restore();
 }
+
+// Cenário original desenhado em Canvas, sem imagens ou dependências externas.
+const terrain=document.createElement('canvas');terrain.width=W;terrain.height=H;
+const land=terrain.getContext('2d');
+let seed=7419;
+function sceneryRandom(){seed=(seed*1664525+1013904223)>>>0;return seed/4294967296}
+function streamX(y){return 405+48*Math.sin(y/85)}
+function riverPath(c){
+ c.beginPath();c.moveTo(streamX(-30),-30);
+ for(let y=-20;y<=H+30;y+=5)c.lineTo(streamX(y),y);
+}
+function tree(x,y,size){
+ land.fillStyle='#172f2250';land.beginPath();land.ellipse(x+9,y+13,size*1.15,size*.65,0,0,TAU);land.fill();
+ land.fillStyle='#69513b';land.fillRect(x-4,y-4,8,19);
+ const crowns=[[-size*.38,0,size*.7,'#284c35'],[size*.35,-3,size*.72,'#32603c'],[0,-size*.45,size*.8,'#3f7445'],[-size*.15,-size*.65,size*.5,'#52864b']];
+ for(const [dx,dy,r,color] of crowns){land.fillStyle=color;land.beginPath();land.arc(x+dx,y+dy,r,0,TAU);land.fill()}
+ land.fillStyle='#78a15b';land.fillRect(x-size*.22,y-size*.86,6,4);
+}
+function makeTerrain(){
+ land.fillStyle='#67834d';land.fillRect(0,0,W,H);
+ for(let i=0;i<4200;i++){
+ const x=sceneryRandom()*W,y=sceneryRandom()*H;
+ land.fillStyle=['#7f9959','#597747','#8ca064','#526e42'][i%4];
+ land.fillRect(x,y,2+sceneryRandom()*5,1+sceneryRandom()*2);
+ }
+ land.lineCap='round';riverPath(land);land.strokeStyle='#b5ab78';land.lineWidth=74;land.stroke();
+ riverPath(land);land.strokeStyle='#4d735f';land.lineWidth=61;land.stroke();
+ riverPath(land);land.strokeStyle='#3e8996';land.lineWidth=49;land.stroke();
+ riverPath(land);land.strokeStyle='#65a7ac';land.lineWidth=31;land.stroke();
+ for(let y=7;y<H;y+=25){
+ land.strokeStyle='#b4ded466';land.lineWidth=2;land.beginPath();
+ const x=streamX(y);land.moveTo(x-12,y);land.lineTo(x+3,y+3);land.stroke();
+ }
+ // Duas pontes destacam as margens sem alterar as regras.
+ for(const y of [125,370]){
+ const x=streamX(y);land.fillStyle='#253c3355';land.fillRect(x-49,y-15,107,46);
+ land.fillStyle='#5b4935';land.fillRect(x-52,y-22,104,43);
+ for(let n=0;n<13;n++){land.fillStyle=n%2?'#b49868':'#a68a5d';land.fillRect(x-50+n*8,y-19,6,36)}
+ land.fillStyle='#d2b783';land.fillRect(x-53,y-24,106,5);land.fillRect(x-53,y+20,106,5);
+ }
+ const trees=[[44,55,24],[103,42,21],[173,65,23],[255,35,20],[546,48,26],[620,37,20],[704,67,27],[761,40,21],[35,158,24],[737,177,26],[65,343,24],[750,324,22],[37,451,26],[112,473,25],[188,436,21],[272,472,23],[551,452,24],[631,478,22],[709,446,28],[772,479,23]];
+ trees.sort((a,b)=>a[1]-b[1]).forEach(t=>tree(...t));
+ for(let i=0;i<35;i++){
+ const y=sceneryRandom()*H,x=streamX(y)+(i%2?1:-1)*(36+sceneryRandom()*10);
+ land.fillStyle=i%2?'#a5a68a':'#858e77';land.beginPath();land.ellipse(x,y,3+sceneryRandom()*4,2+sceneryRandom()*3,0,0,TAU);land.fill();
+ }
+ land.strokeStyle='#e4e7b04a';land.lineWidth=2;land.strokeRect(10,10,W-20,H-20);
+}
+makeTerrain();
+
 function draw(){
- ctx.clearRect(0,0,W,H);ctx.strokeStyle='#ffffff06';ctx.lineWidth=1;
- for(let x=0;x<W;x+=40){ctx.beginPath();ctx.moveTo(x,0);ctx.lineTo(x,H);ctx.stroke()}
- for(let y=0;y<H;y+=40){ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(W,y);ctx.stroke()}
- ctx.strokeStyle='#81937033';ctx.setLineDash([6,10]);ctx.strokeRect(12,12,W-24,H-24);ctx.setLineDash([]);
+ ctx.clearRect(0,0,W,H);ctx.drawImage(terrain,0,0);
+ // Reflexos seguem o tempo de simulação e param durante a pausa.
+ ctx.strokeStyle='#d7f8e64a';ctx.lineWidth=2;
+ for(let n=0;n<17;n++){
+ const y=((n*33+time*15)%(H+20))-10,x=streamX(y);
+ ctx.beginPath();ctx.moveTo(x-10,y);ctx.lineTo(x+2,y+2);ctx.stroke();
+ }
  tanks.forEach(tank);
  bullets.forEach(b=>{ctx.fillStyle='#fff0ac';ctx.shadowColor='#ffcc55';ctx.shadowBlur=12;
  ctx.beginPath();ctx.arc(b.x,b.y,4,0,TAU);ctx.fill();ctx.shadowBlur=0});

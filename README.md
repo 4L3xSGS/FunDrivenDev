@@ -18,7 +18,7 @@ Criar, experimentar, aprender e voltar para mais uma partida.
 
 | Jogo | A experiência | Tecnologia | Estado |
 | :--- | :--- | :--- | :--- |
-| **[Duelo de Tanques](jogos/duelo-de-tanques/)** | Dois tanques em movimento aleatório. Um tiro a cada 3 segundos. O primeiro atingido perde. | HTML Canvas · JavaScript | Protótipo |
+| **[Duelo de Tanques](jogos/duelo-de-tanques/)** | Dois tanques em movimento aleatório. Um tiro a cada 1,5 segundo. O primeiro atingido perde. | HTML Canvas · JavaScript | Protótipo |
 
 **Um conceito por vez. Uma experiência completa por jogo.**
 
