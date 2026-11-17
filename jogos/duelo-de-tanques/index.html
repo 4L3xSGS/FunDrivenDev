@@ -10,13 +10,14 @@
 <div class="bar"><span class="badge" style="color:#69d8ff">● Tanque Azul</span><span id="clock">Próximo disparo: 1,5 s</span><span class="badge" style="color:#ff9a72">● Tanque Laranja</span></div>
 <canvas id="arena" width="800" height="500" aria-label="Arena de dois tanques com gramado, árvores e riacho atravessável"></canvas>
 <div class="bar"><span id="status" role="status" aria-live="polite">Partida em andamento</span><div><button id="pause">Pausar</button> <button id="restart">Nova partida</button></div></div>
-<footer>Soldado: −25% por acerto • Tanque: destruição imediata • Saúde: 100% azul / 75% verde / 50% laranja / 25% vermelho</footer></main>
+<p id="events" role="status" aria-live="polite" style="min-height:3em;color:#e6e5b7">Uma missão de resgate está prestes a começar.</p>
+<footer>Soldado: −25% por acerto • Tanque: destruição imediata • Saúde: 100% azul / 75% verde / 50% laranja / 25% vermelho • Civil, ferido e socorrista são personagens narrativos, sem dano</footer></main>
 <script>
 const canvas=document.querySelector('canvas'),ctx=canvas.getContext('2d');
 const status=document.querySelector('#status'),clock=document.querySelector('#clock');
 const pause=document.querySelector('#pause');
 const W=800,H=500,R=20,TAU=Math.PI*2,SHOT_INTERVAL=1.5;
-let soldiers,tanks,bullets,particles,time,nextShot,over,paused,last;
+let civilian,rescue,nextCivilianAt,soldiers,tanks,bullets,particles,time,nextShot,over,paused,last;
 const randomAngle=()=>Math.random()*TAU;
 function reset(){
  tanks=[
@@ -26,6 +27,12 @@ function reset(){
  soldiers=[{x:55,y:250,team:0,alive:true,aim:0},{x:745,y:250,team:1,alive:true,aim:Math.PI}];
  bullets=[];particles=[];time=0;nextShot=SHOT_INTERVAL;over=false;paused=false;
  status.textContent='Partida em andamento';pause.textContent='Pausar';pause.disabled=false;
+ const team=Math.random()<.5?0:1;
+ rescue={team,phase:'waiting',startAt:1+Math.random(),wait:0,
+ medic:{x:soldiers[team].x,y:soldiers[team].y},
+ wounded:{x:team===0?260:540,y:Math.random()<.5?165:335}};
+ civilian=null;nextCivilianAt=.8+Math.random()*1.2;
+ announce('Pedido de socorro: um soldado '+(team===0?'azul':'laranja')+' está ferido no campo.');
  last=performance.now();draw();
 }
 function fire(t,i){
@@ -44,6 +51,7 @@ function hitFraction(b,dt,t,targetRadius=R){
 }
 function update(dt){
  if(paused||over)return;time+=dt;
+ updateNarrative(dt);
  const previous=tanks.map(t=>({x:t.x,y:t.y}));
  tanks.forEach(t=>{
  t.turn-=dt;if(t.turn<=0){t.a=randomAngle();t.turn=.5+Math.random()*1.5}
@@ -64,6 +72,100 @@ function update(dt){
  if(over)return;
  bullets.forEach(b=>{b.x+=b.vx*dt;b.y+=b.vy*dt});
  bullets=bullets.filter(b=>b.x>=0&&b.x<=W&&b.y>=0&&b.y<=H);
+}
+
+
+function announce(message){
+ const el=document.querySelector('#events');
+ if(el.textContent!==message)el.textContent=message;
+}
+function walkTo(person,target,speed,dt){
+ const dx=target.x-person.x,dy=target.y-person.y,d=Math.hypot(dx,dy);
+ if(d<=speed*dt){person.x=target.x;person.y=target.y;return true}
+ person.x+=dx/d*speed*dt;person.y+=dy/d*speed*dt;return false;
+}
+function spawnCivilian(){
+ const direction=Math.random()<.5?1:-1;
+ civilian={x:direction===1?-30:W+30,y:370,direction,quote:'Era aqui a faixa de pedestres?'};
+ announce('Um cego num tiroteio: “Era aqui a faixa de pedestres?”');
+}
+function updateNarrative(dt){
+ if(!civilian&&time>=nextCivilianAt)spawnCivilian();
+ if(civilian){
+ civilian.x+=civilian.direction*90*dt;
+ if(civilian.x>W+45||civilian.x< -45){
+ civilian=null;nextCivilianAt=time+10+Math.random()*10;
+ }
+ }
+ if(rescue.phase==='waiting'&&time>=rescue.startAt){
+ rescue.phase='outbound';announce('SOCORRISTA: “Aguenta firme! Estou chegando!”');
+ }
+ if(rescue.phase==='outbound'&&walkTo(rescue.medic,rescue.wounded,95,dt)){
+ rescue.phase='aid';rescue.wait=1.2;announce('SOCORRISTA prestando os primeiros cuidados.');
+ }else if(rescue.phase==='aid'){
+ rescue.wait-=dt;
+ if(rescue.wait<=0){rescue.phase='returning';announce('SOCORRISTA retornando com o ferido na maca.')}
+ }else if(rescue.phase==='returning'){
+ if(walkTo(rescue.medic,soldiers[rescue.team],65,dt)){
+ rescue.phase='saved';announce('Resgate concluído: o ferido chegou à trincheira '+(rescue.team===0?'azul':'laranja')+'.');
+ }
+ }
+}
+function nameplate(x,y,text,color='#eaf5dc'){
+ ctx.save();ctx.font='bold 10px system-ui';ctx.textAlign='center';
+ const width=ctx.measureText(text).width+12;
+ x=Math.max(width/2+3,Math.min(W-width/2-3,x));
+ ctx.fillStyle='#102020e6';ctx.fillRect(x-width/2,y-11,width,16);
+ ctx.fillStyle=color;ctx.fillText(text,x,y);ctx.restore();
+}
+function drawWounded(x,y,carried=false){
+ ctx.save();ctx.translate(x,y);
+ if(carried){
+ ctx.fillStyle='#a99c73';ctx.fillRect(-13,-19,26,38);
+ ctx.strokeStyle='#ded9b7';ctx.lineWidth=3;ctx.strokeRect(-15,-23,30,46);
+ }
+ ctx.rotate(.3);
+ ctx.fillStyle=rescue.team===0?'#69d8ff':'#ff9a72';ctx.fillRect(-7,-8,14,21);
+ ctx.fillStyle='#d7b18a';ctx.beginPath();ctx.arc(0,-13,6,0,TAU);ctx.fill();
+ ctx.fillStyle='#e3e5d6';ctx.fillRect(-6,0,12,5);
+ ctx.strokeStyle='#364631';ctx.lineWidth=5;
+ ctx.beginPath();ctx.moveTo(-4,12);ctx.lineTo(-7,23);ctx.moveTo(4,12);ctx.lineTo(8,21);ctx.stroke();ctx.restore();
+}
+function drawNarrative(){
+ if(rescue.phase!=='saved'){
+ const m=rescue.medic,w=rescue.wounded;
+ if(rescue.phase==='returning')drawWounded(m.x,m.y-29,true);
+ else{drawWounded(w.x,w.y);nameplate(w.x,w.y-30,'FERIDO',rescue.team===0?'#69d8ff':'#ff9a72')}
+ if(rescue.phase!=='waiting'){
+ ctx.save();ctx.translate(m.x,m.y);
+ const step=Math.sin(time*13)*3;
+ ctx.strokeStyle='#233e38';ctx.lineWidth=5;ctx.beginPath();
+ ctx.moveTo(-4,3);ctx.lineTo(-5,13+step);ctx.moveTo(4,3);ctx.lineTo(5,13-step);ctx.stroke();
+ ctx.fillStyle='#dcece2';ctx.fillRect(-9,-9,18,17);
+ ctx.fillStyle='#28a99c';ctx.fillRect(-2,-7,4,13);ctx.fillRect(-6,-3,12,4);
+ ctx.fillStyle='#d7b18a';ctx.beginPath();ctx.arc(0,-15,6,0,TAU);ctx.fill();
+ ctx.fillStyle='#dcece2';ctx.fillRect(-7,-21,14,5);
+ ctx.fillStyle='#35574c';ctx.fillRect(9,-1,9,11);ctx.restore();
+ nameplate(m.x,m.y+(rescue.phase==='returning'?32:-30),'SOCORRISTA','#71efdc');
+ }
+ }
+ if(civilian){
+ const c=civilian,step=Math.sin(time*10)*4;
+ ctx.save();ctx.translate(c.x,c.y);
+ ctx.fillStyle='#15292155';ctx.beginPath();ctx.ellipse(3,10,13,6,0,0,TAU);ctx.fill();
+ ctx.strokeStyle='#2b3655';ctx.lineWidth=5;ctx.beginPath();
+ ctx.moveTo(-4,2);ctx.lineTo(-4,14+step);ctx.moveTo(4,2);ctx.lineTo(4,14-step);ctx.stroke();
+ ctx.fillStyle='#f3d36f';ctx.fillRect(-8,-11,16,16);
+ ctx.fillStyle='#d7b18a';ctx.beginPath();ctx.arc(0,-17,7,0,TAU);ctx.fill();
+ ctx.fillStyle='#252f42';ctx.fillRect(-7,-20,14,4);
+ ctx.strokeStyle='#f7f9ef';ctx.lineWidth=3;
+ ctx.beginPath();ctx.moveTo(c.direction*7,-2);ctx.lineTo(c.direction*(28+Math.sin(time*6)*4),19);ctx.stroke();
+ ctx.fillStyle='#e54e4e';ctx.beginPath();ctx.arc(c.direction*(28+Math.sin(time*6)*4),19,2,0,TAU);ctx.fill();
+ ctx.restore();
+ nameplate(c.x,c.y-39,'CIVIL · BENGALA BRANCA','#f3d36f');
+ // Balão curto e legível também em telas menores.
+ nameplate(c.x,c.y+35,c.quote,'#fff2bf');
+ }
 }
 
 function resolveRunovers(previous){
@@ -239,6 +341,7 @@ function draw(){
  ctx.beginPath();ctx.arc(b.x,b.y,b.radius??4,0,TAU);ctx.fill();ctx.shadowBlur=0});
  particles.forEach(p=>{ctx.globalAlpha=Math.min(1,p.life);ctx.fillStyle=p.life>.5?'#ffd86b':'#ed7445';ctx.fillRect(p.x-3,p.y-3,6,6)});
  ctx.globalAlpha=1;
+ drawNarrative();
  tanks.forEach(healthBar);
  tanks.forEach((t,i)=>{
  const label='● Tanque '+t.name+' · '+t.hp+'% · Soldado '+(soldiers[i].alive?'ativo':'eliminado');

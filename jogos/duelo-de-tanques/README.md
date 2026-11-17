@@ -26,6 +26,16 @@ Abra [index.html](index.html) localmente no navegador, ou escolha o jogo pelo ca
 ## Cenário
 Gramado texturizado, árvores, riacho com reflexos animados, pedras nas margens e duas pontes. O cenário é visual: árvores, pontes e água não bloqueiam o movimento nem os disparos. Todo o desenho é original em Canvas, sem assets externos.
 
+## Eventos e resgate
+- Um civil com bengala branca aparece entre 0,8 e 2 segundos de simulação e cruza pela altura da ponte inferior, da esquerda para a direita ou no sentido inverso, sorteado. Depois de sair, novas travessias podem ocorrer com intervalos de 10 a 20 segundos.
+- O balão “Era aqui a faixa de pedestres?” e o aviso “Um cego num tiroteio” fazem humor com o cenário absurdo.
+- No começo da partida, um soldado adicional já está ferido no campo. Seu lado (azul ou laranja) e posição vertical são sorteados.
+- Um socorrista adicional sai da trincheira do mesmo lado após 1 a 2 segundos, alcança o ferido, presta cuidados durante 1,2 segundo e o leva em uma maca de volta à trincheira.
+- O socorrista tem uniforme claro, identificação verde-água e o rótulo **SOCORRISTA**; o ferido tem a cor de sua equipe.
+- Civil, ferido e socorrista são personagens narrativos: não atiram, não recebem dano, não são atropelados e não alteram a vitória dos tanques. As regras anteriores de atropelamento continuam valendo para os soldados combatentes.
+- A pausa congela eventos, travessia e resgate. Reiniciar recria todos os personagens. A destruição de um tanque encerra a partida e interrompe eventos ainda em andamento.
+- Avisos em texto com anúncio acessível acompanham a missão.
+
 ## Controles
 
 | Botão | Ação |
@@ -36,6 +46,7 @@ Gramado texturizado, árvores, riacho com reflexos animados, pedras nas margens 
 Ao ocultar a aba, a partida pausa. O intervalo é contado em tempo de simulação.
 
 ## Histórico
+- **0.5.0:** travessia inesperada de civil com bengala branca e missão de resgate com socorrista e maca.
 - **0.4.0:** mira aleatória por posição no campo e eliminação de soldados por atropelamento.
 - **0.3.0:** duas trincheiras com soldados, disparos direcionais aleatórios, eliminação de soldados e barras de saúde dos tanques.
 - **0.2.0:** cenário Operação Riacho, árvores e água animada; disparos reduzidos para 1,5 segundo.
