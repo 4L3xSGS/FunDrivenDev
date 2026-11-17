@@ -29,7 +29,10 @@ function reset(){
  last=performance.now();draw();
 }
 function fire(t,i){
- const a=randomAngle();t.turret=a;
+ // Faixa central: 40% a 60% da largura. Fora dela, mira no hemisfério oposto.
+ const a=t.x<W*.4?(Math.random()-.5)*Math.PI:
+ t.x>W*.6?Math.PI+(Math.random()-.5)*Math.PI:randomAngle();
+ t.turret=a;
  bullets.push({x:t.x+Math.cos(a)*29,y:t.y+Math.sin(a)*29,vx:Math.cos(a)*260,vy:Math.sin(a)*260,owner:i,kind:'tank',radius:4});
 }
 function hitFraction(b,dt,t,targetRadius=R){
@@ -41,6 +44,7 @@ function hitFraction(b,dt,t,targetRadius=R){
 }
 function update(dt){
  if(paused||over)return;time+=dt;
+ const previous=tanks.map(t=>({x:t.x,y:t.y}));
  tanks.forEach(t=>{
  t.turn-=dt;if(t.turn<=0){t.a=randomAngle();t.turn=.5+Math.random()*1.5}
  t.x+=Math.cos(t.a)*75*dt;t.y+=Math.sin(t.a)*75*dt;
@@ -54,6 +58,7 @@ function update(dt){
  t.x=Math.max(R,Math.min(W-R,t.x+sign*nx*push));
  t.y=Math.max(R,Math.min(H-R,t.y+sign*ny*push));t.a=randomAngle()});
  }
+ resolveRunovers(previous);
  while(time>=nextShot){tanks.forEach(fire);soldiers.forEach(fireSoldier);nextShot+=SHOT_INTERVAL}
  resolveProjectiles(dt);
  if(over)return;
@@ -61,6 +66,18 @@ function update(dt){
  bullets=bullets.filter(b=>b.x>=0&&b.x<=W&&b.y>=0&&b.y<=H);
 }
 
+function resolveRunovers(previous){
+ tanks.forEach((t,i)=>{
+ if(t.destroyed)return;
+ const p=previous[i],dx=t.x-p.x,dy=t.y-p.y,length=dx*dx+dy*dy;
+ soldiers.forEach(s=>{
+ if(!s.alive)return;
+ const fraction=length?Math.max(0,Math.min(1,((s.x-p.x)*dx+(s.y-p.y)*dy)/length)):0;
+ const x=p.x+fraction*dx,y=p.y+fraction*dy;
+ if(Math.hypot(s.x-x,s.y-y)<=R+10){s.alive=false;burst(s,12)}
+ });
+ });
+}
 function fireSoldier(s){
  if(!s.alive)return;
  // Dispersão aleatória no hemisfério voltado para a trincheira adversária.
