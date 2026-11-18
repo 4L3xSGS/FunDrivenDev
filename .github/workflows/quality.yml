@@ -20,3 +20,5 @@ jobs:
           persist-credentials: false
       - name: Verificar estrutura, links e scripts
         run: python3 scripts/check.py
+      - name: Smoke test Bomb Maze (jogabilidade e áudio)
+        run: node tests/bomb-maze-smoke.cjs
