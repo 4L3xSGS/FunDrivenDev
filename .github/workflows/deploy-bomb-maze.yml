@@ -2,7 +2,6 @@ name: Deploy Bomb Maze to GitHub Pages
 on:
   push:
     branches: [main]
-    paths:
   workflow_dispatch:
 permissions:
   contents: read
