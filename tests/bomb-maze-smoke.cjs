@@ -13,7 +13,7 @@ class Oscillator{constructor(){this.frequency={setValueAtTime(){},exponentialRam
 class Gain{constructor(){this.gain={setValueAtTime(){},exponentialRampToValueAtTime(){}}}connect(){}}
 class AudioContext{constructor(){this.currentTime=0;this.state='running';this.destination={}}createOscillator(){return new Oscillator()}createGain(){return new Gain()}}
 const document={querySelector(sel){return sel==='canvas'?canvas:sel==='#stats'?element('stats'):element(sel.slice(1))},querySelectorAll:()=>directions,addEventListener(k,fn){listeners[k]=fn}};
-const context={document,performance:{now:()=>now},requestAnimationFrame(fn){frame=fn},AudioContext,Math,console};
+const context={document,window:{AudioContext},performance:{now:()=>now},requestAnimationFrame(fn){frame=fn},AudioContext,Math,console};
 vm.runInNewContext(script,context,{timeout:3000});
 const tick=delta=>{now+=delta;assert.ok(frame,'animation loop scheduled');frame(now)};
 const key=(key,code)=>listeners.keydown({key,code,preventDefault(){}});
