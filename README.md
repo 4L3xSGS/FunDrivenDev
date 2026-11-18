@@ -19,6 +19,7 @@ Criar, experimentar, aprender e voltar para mais uma partida.
 | Jogo | A experiência | Tecnologia | Estado |
 | :--- | :--- | :--- | :--- |
 | **[Duelo de Tanques](jogos/duelo-de-tanques/)** | Dois tanques em movimento aleatório. Um tiro a cada 1,5 segundo. O primeiro atingido perde. | HTML Canvas · JavaScript | Protótipo |
+| **[Mini Ilha 4.1](jogos/mini-ilha/)** | City builder com moradores, profissões, rotinas e clima de São Paulo. | HTML Canvas · JavaScript | Protótipo |
 
 **Um conceito por vez. Uma experiência completa por jogo.**
 
