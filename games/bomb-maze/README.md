@@ -4,7 +4,7 @@
 
 ## 🎮 Play
 
-Once GitHub Pages is enabled for the repository, play at **https://4l3xsgs.github.io/FunDrivenDev/games/bomb-maze/**.
+Play online at **https://4l3xsgs.github.io/FunDrivenDev/games/bomb-maze/**.
 
 ## Features
 
@@ -15,6 +15,8 @@ Once GitHub Pages is enabled for the repository, play at **https://4l3xsgs.githu
 - Collectible upgrades for blast range, bomb capacity, and movement speed
 - Three lives, score tracking, victory and defeat screens
 - Keyboard and touch controls
+- Hand-drawn 16-bit-inspired pixel sprites, animated bombs, characters, pickups and particle effects
+- Optional synthesized arcade sound effects (Web Audio API); muted by default
 
 ## Controls
 
@@ -23,6 +25,7 @@ Once GitHub Pages is enabled for the repository, play at **https://4l3xsgs.githu
 | Move | Arrow keys / WASD | Direction buttons |
 | Place bomb | Space | Bomb button |
 | Restart | R | Restart button |
+| Toggle sound | Sound button | Sound button |
 
 ## Run locally
 
@@ -35,7 +38,7 @@ Vanilla JavaScript, HTML5 Canvas, and CSS. No external assets or runtime depende
 ## Roadmap
 
 - [x] First playable solo prototype
-- [ ] Sound effects and refined animations
+- [x] Sound effects and refined animations
 - [ ] Smarter enemy pathfinding and bomb placement
 - [ ] Multiple arenas and progression
 - [ ] Automated browser smoke tests
@@ -43,7 +46,7 @@ Vanilla JavaScript, HTML5 Canvas, and CSS. No external assets or runtime depende
 
 ## Status
 
-**Prototype v1.0** — manual gameplay verification across browsers/devices is still recommended.
+**Visual/audio enhancement candidate v1.1** — manual gameplay verification across browsers/devices is still recommended.
 
 ## License
 
