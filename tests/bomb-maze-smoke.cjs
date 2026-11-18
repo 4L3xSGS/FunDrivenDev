@@ -17,8 +17,8 @@ const context={document,window:{AudioContext},performance:{now:()=>now},requestA
 vm.runInNewContext(script,context,{timeout:3000});
 const tick=delta=>{now+=delta;assert.ok(frame,'animation loop scheduled');frame(now)};
 const key=(key,code)=>listeners.keydown({key,code,preventDefault(){}});
-assert.match(element('stats').textContent,/❤ 3/);
-tick(20);assert.match(element('stats').textContent,/👾 3/);
+tick(20);
+assert.match(element('stats').textContent,/❤ 3/);assert.match(element('stats').textContent,/👾 3/);
 key('ArrowRight','ArrowRight');key(' ','Space');tick(1950);
 assert.ok(element('stats').textContent.includes('★'),'HUD updated after explosion');
 element('sound').onclick();assert.equal(element('sound')['aria-pressed'],'true');
