@@ -18,13 +18,14 @@ Criar, experimentar, aprender e voltar para mais uma partida.
 
 | Jogo | A experiência | Tecnologia | Estado |
 | :--- | :--- | :--- | :--- |
+| **[💣 Bomb Maze](games/bomb-maze/)** · [▶ Jogar agora](https://4l3xsgs.github.io/FunDrivenDev/games/bomb-maze/) | Arena arcade 16-bit com bombas, obstáculos destrutíveis, três inimigos e power-ups. | HTML5 Canvas · JavaScript | Jogável · v1.0 |
 | **[Duelo de Tanques](jogos/duelo-de-tanques/)** | Dois tanques em movimento aleatório. Um tiro a cada 1,5 segundo. O primeiro atingido perde. | HTML Canvas · JavaScript | Protótipo |
 
 **Um conceito por vez. Uma experiência completa por jogo.**
 
 O catálogo cresce conforme novos jogos são desenvolvidos. Cada projeto tem sua própria pasta, regras e histórico, sem misturar experimentos nem perder versões anteriores.
 
-> **Onde jogar:** baixe o repositório e abra `index.html` no navegador. Os links do GitHub mostram arquivos e documentação; a publicação online ainda não está configurada.
+> **Jogue online:** [Abrir o catálogo](https://4l3xsgs.github.io/FunDrivenDev/) ou [jogar Bomb Maze diretamente](https://4l3xsgs.github.io/FunDrivenDev/games/bomb-maze/). Também é possível baixar o repositório e abrir os arquivos HTML localmente.
 
 ## ⚡ Do repositório para a arena
 
@@ -71,7 +72,7 @@ A estrutura está preparada para novos jogos. Engines, bibliotecas, multiplayer 
 - [x] Criar catálogo, identidade visual e documentação.
 - [x] Adicionar verificação automatizada da estrutura.
 - [ ] Validar as experiências em celular e computador.
-- [ ] Publicar o catálogo com links jogáveis.
+- [x] Publicar Bomb Maze com link jogável no GitHub Pages.
 - [ ] Desenvolver o próximo jogo a partir de uma ideia aprovada.
 
 Veja os critérios e as próximas etapas no [roadmap](docs/ROADMAP.md).
