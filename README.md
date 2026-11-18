@@ -18,7 +18,8 @@ Criar, experimentar, aprender e voltar para mais uma partida.
 
 | Jogo | A experiência | Tecnologia | Estado |
 | :--- | :--- | :--- | :--- |
-| **[💣 Bomb Maze](games/bomb-maze/)** · [▶ Jogar agora](https://4l3xsgs.github.io/FunDrivenDev/games/bomb-maze/) | Arena arcade 16-bit com bombas, obstáculos destrutíveis, três inimigos e power-ups. | HTML5 Canvas · JavaScript | Jogável · v1.0 |\n| **[Duelo de Tanques](jogos/duelo-de-tanques/)** | Dois tanques em movimento aleatório. Um tiro a cada 1,5 segundo. O primeiro atingido perde. | HTML Canvas · JavaScript | Protótipo |
+| **[💣 Bomb Maze](games/bomb-maze/)** · [▶ Jogar agora](https://4l3xsgs.github.io/FunDrivenDev/games/bomb-maze/) | Arena arcade 16-bit com bombas, obstáculos destrutíveis, três inimigos e power-ups. | HTML5 Canvas · JavaScript | Jogável · v1.0 |
+| **[Duelo de Tanques](jogos/duelo-de-tanques/)** | Dois tanques em movimento aleatório. Um tiro a cada 1,5 segundo. O primeiro atingido perde. | HTML Canvas · JavaScript | Protótipo |
 
 **Um conceito por vez. Uma experiência completa por jogo.**
 
