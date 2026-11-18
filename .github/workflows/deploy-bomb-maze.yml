@@ -3,8 +3,6 @@ on:
   push:
     branches: [main]
     paths:
-      - 'games/bomb-maze/**'
-      - '.github/workflows/deploy-bomb-maze.yml'
   workflow_dispatch:
 permissions:
   contents: read
@@ -12,7 +10,7 @@ permissions:
   id-token: write
 concurrency:
   group: github-pages
-  cancel-in-progress: true
+  cancel-in-progress: false
 jobs:
   deploy:
     environment:
@@ -21,6 +19,14 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      - name: Validar arquivos antes da publicação
+        run: |
+          python3 scripts/check.py
+          node tests/bomb-maze-smoke.cjs
+          grep -q 'id="sound"' games/bomb-maze/index.html
+          grep -q 'Bomb Maze' index.html
+          echo "$GITHUB_SHA" > deployment-version.txt
+          touch .nojekyll
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v3
         with:
