@@ -6,7 +6,7 @@ assert.ok(script,'game script exists');
 const listeners={},buttons={};
 const canvasContext=new Proxy({},{get:(target,prop)=>prop in target?target[prop]:()=>{} ,set:(target,prop,value)=>{target[prop]=value;return true}});
 const canvas={getContext:()=>canvasContext};
-const element=id=>buttons[id]??=( {textContent:'',dataset:{},setAttribute(k,v){this[k]=v},addEventListener(k,fn){this[k]=fn}} );
+const element=id=>buttons[id]??=( {textContent:'',dataset:{},style:{},setAttribute(k,v){this[k]=v},addEventListener(k,fn){this[k]=fn},getBoundingClientRect(){return {left:0,top:0,width:148,height:148}},setPointerCapture(){}} );
 const directions=['0,-1','-1,0','0,1','1,0'].map(dir=>({dataset:{dir},addEventListener(k,fn){this[k]=fn}}));
 let now=1000,frame=null,oscillators=0;
 class Oscillator{constructor(){this.frequency={setValueAtTime(){},exponentialRampToValueAtTime(){}}}connect(){}start(){oscillators++}stop(){}}
@@ -24,7 +24,7 @@ assert.ok(element('stats').textContent.includes('★'),'HUD updated after explos
 element('sound').onclick();assert.equal(element('sound')['aria-pressed'],'true');
 key(' ','Space');assert.ok(oscillators>0,'sound oscillator started');
 element('sound').onclick();assert.equal(element('sound')['aria-pressed'],'false');
-directions[0].click();element('bomb').onclick();tick(2000);
+const joystick=element('joystick');joystick.pointerdown({pointerId:1,clientX:120,clientY:74});tick(160);joystick.pointermove({pointerId:1,clientX:74,clientY:15});tick(160);joystick.pointerup({pointerId:1});assert.equal(element('stick').style.transform,'translate(-50%,-50%)','joystick recenters after release');element('bomb').onclick();tick(2000);
 key('r','KeyR');tick(16);assert.match(element('stats').textContent,/❤ 3/);
 element('restart').onclick();tick(16);assert.match(element('stats').textContent,/👾 3/);
-console.log('OK: render loop, HUD, keyboard, touch controls, bombs, restart, audio toggle and oscillator');
+console.log('OK: render loop, HUD, keyboard, analog joystick pointer controls, bombs, restart, audio toggle and oscillator');
