@@ -15,7 +15,9 @@ Play online at **https://4l3xsgs.github.io/FunDrivenDev/games/bomb-maze/**.
 - Collectible upgrades for blast range, bomb capacity, and movement speed
 - Three lives, score tracking, victory and defeat screens
 - Keyboard and touch controls
-- Hand-drawn 16-bit-inspired pixel sprites, animated bombs, characters, pickups and particle effects
+- v1.2: dedicated pixel-art tile renderer, layered stone masonry, textured floor, detailed wooden crates and distinct enemy palettes
+- v1.2: redesigned hero with readable face, equipment and alternating walk pose; animated enemy sprites
+- Animated bombs, pickups and particle effects
 - Optional synthesized arcade sound effects (Web Audio API); muted by default
 
 ## Controls
@@ -41,12 +43,12 @@ Vanilla JavaScript, HTML5 Canvas, and CSS. No external assets or runtime depende
 - [x] Sound effects and refined animations
 - [ ] Smarter enemy pathfinding and bomb placement
 - [ ] Multiple arenas and progression
-- [ ] Automated browser smoke tests
+- [x] Automated logic and audio smoke tests (Node.js simulation)
 - [ ] Accessibility and touch usability improvements
 
 ## Status
 
-**Visual/audio enhancement candidate v1.1** — manual gameplay verification across browsers/devices is still recommended.
+**v1.2 visual redesign candidate** — isolated PR; no release until CI approval and manual visual checks on desktop/mobile. Existing gameplay and audio rules remain unchanged.
 
 ## License
 
