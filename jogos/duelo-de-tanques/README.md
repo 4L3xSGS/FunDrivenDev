@@ -10,7 +10,7 @@ Abra [index.html](index.html) localmente no navegador, ou escolha o jogo pelo ca
 ## Pilotar o azul
 
 - No celular, arraste o direcional esquerdo e toque ou segure o disparo com o polegar direito. Os dois comandos funcionam ao mesmo tempo. No computador, use WASD ou as setas para mover e espaço para atirar.
-- A torre acompanha o adversário. O canhão recarrega em 1,5 segundo e cada acerto de tanque tira 50 pontos de blindagem. Soldados tiram 25 pontos por acerto, inclusive de aliados.
+- A torre acompanha o adversário. O canhão recarrega em 1,5 segundo e cada acerto de tanque tira 25 pontos de blindagem. Um tanque cheio aguenta três acertos e é destruído no quarto. Soldados tiram 25 pontos por acerto, inclusive de aliados.
 - O rival muda de posição e trava a mira antes de disparar. Quando surgir o traço de aviso, saia da linha para desviar.
 - Em retrato, o azul começa embaixo. Em paisagem, começa à esquerda. O direcional sempre acompanha os eixos da tela.
 

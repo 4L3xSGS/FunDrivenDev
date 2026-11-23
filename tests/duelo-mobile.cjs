@@ -46,6 +46,7 @@ async function mobileRound(browser) {
   await checkLayout(page,'portrait');
   await tap(page,'#primary');
   assert.equal(await page.evaluate(() => phase), 'playing');
+  const originY = await page.evaluate(() => tanks[0].y);
   const stick = await center(page,'#stick'), fire = await center(page,'#fire');
   const drivePoint = {x:stick.x,y:stick.y-22,id:1}, firePoint = {...fire,id:2};
   await touches('touchStart',[{...stick,id:1}]);
@@ -53,7 +54,7 @@ async function mobileRound(browser) {
   await touches('touchStart',[drivePoint,firePoint]);
   await page.clock.runFor(450);
   const moved = await page.evaluate(() => ({x:tanks[0].x,y:tanks[0].y,shots:bullets.filter(b=>b.owner===0 && b.kind==='tank').length}));
-  assert.ok(moved.x>185 && Math.abs(moved.y-250)<1,'polegar para cima avança na tela vertical');
+  assert.ok(moved.x>185 && Math.abs(moved.y-originY)<1,'polegar para cima avança na tela vertical');
   assert.equal(moved.shots,1,'o segundo dedo dispara durante o movimento');
   await page.clock.runFor(1200);
   assert.ok(await page.evaluate(() => playerReady>2.9),'segurar dispara novamente após a recarga');
@@ -90,8 +91,10 @@ async function mobileRound(browser) {
     updateHud();
     return rival.hp;
   });
+  assert.equal(await hit(),75);
   assert.equal(await hit(),50);
   assert.equal(await page.locator('#orangeHp').textContent(),'50%');
+  assert.equal(await hit(),25);
   assert.equal(await hit(),0);
   assert.equal(await page.locator('#status').textContent(),'Você venceu!');
   await tap(page,'#primary');

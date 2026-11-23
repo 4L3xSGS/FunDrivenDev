@@ -59,6 +59,7 @@ h1 { font-size: clamp(24px, 4vw, 42px) }
 .unit output, .timer { font: bold 12px/1.3 ui-monospace, monospace; font-variant-numeric: tabular-nums }
 .health { height: 5px; margin-top: 3px; background: #495543; overflow: hidden; border-radius: 2px }
 .health i { display: block; height: 100%; width: 100%; background: currentColor }
+.infantry { display: block; margin-top: 2px; font-size: 10px; color: var(--muted) }
 .timer { color: var(--ink); letter-spacing: .03em }
 .battle {
   min-height: 0; display: grid; grid-template-columns: minmax(78px,1fr) minmax(0,800px) minmax(78px,1fr);
@@ -143,9 +144,9 @@ h2 { font-size: clamp(19px, 3.4vh, 30px) }
     <button id="pause" class="menu-button" disabled>Pausar</button>
   </header>
   <section class="hud" aria-label="Blindagem e tempo da rodada">
-    <div class="unit"><div class="unit-head"><small id="blueLabel">Tanque azul</small><output id="blueHp" aria-live="off">100%</output></div><div class="health"><i id="blueBar"></i></div></div>
+    <div class="unit"><div class="unit-head"><small id="blueLabel">Tanque azul</small><output id="blueHp" aria-live="off">100%</output></div><div class="health"><i id="blueBar"></i></div><span id="blueSoldier" class="infantry">Soldado ativo</span></div>
     <time class="timer" id="clock" aria-label="Tempo de partida">00:00</time>
-    <div class="unit"><div class="unit-head"><small>Tanque laranja</small><output id="orangeHp" aria-live="off">100%</output></div><div class="health"><i id="orangeBar"></i></div></div>
+    <div class="unit"><div class="unit-head"><small>Tanque laranja</small><output id="orangeHp" aria-live="off">100%</output></div><div class="health"><i id="orangeBar"></i></div><span id="orangeSoldier" class="infantry">Soldado ativo</span></div>
   </section>
   <div class="battle">
     <div class="theater"><div class="screen">
@@ -192,6 +193,12 @@ function resetRound() {
     {x:145,y:250,a:0,turret:0,color:'#69d8ff',name:'Azul',turn:0,hp:100},
     {x:655,y:250,a:Math.PI,turret:Math.PI,color:'#ff9a72',name:'Laranja',turn:0,hp:100}
   ];
+  if (mode === 'solo') {
+    tanks[0].y = 325;
+    tanks[1].y = 175 + Math.random()*120;
+    tanks[0].turret = Math.atan2(tanks[1].y-tanks[0].y,tanks[1].x-tanks[0].x);
+    tanks[1].turret = tanks[0].turret + Math.PI;
+  }
   soldiers = [{x:55,y:250,team:0,alive:true,aim:0},{x:745,y:250,team:1,alive:true,aim:Math.PI}];
   bullets = []; particles = []; time = 0; nextShot = SHOT_INTERVAL;
   playerReady = 0; enemyReady = 2.6; enemyLocked = false; target = null;
@@ -326,7 +333,7 @@ function update(dt) {
   resolveRunovers(previous);
   if (mode === 'solo') {
     const [player, enemy] = tanks;
-    const lead = Math.min(.8, distance/260);
+    const lead = Math.min(.35, distance/260);
     const aimX = clamp(enemy.x + (enemy.x-previous[1].x)*lead/dt,R,W-R);
     const aimY = clamp(enemy.y + (enemy.y-previous[1].y)*lead/dt,R,H-R);
     player.turret = Math.atan2(aimY-player.y,aimX-player.x);
@@ -386,12 +393,13 @@ function updateNarrative(dt){
  }
  }
 }
-function nameplate(x,y,text,color='#eaf5dc'){
+function nameplate(x,y,text,color,offsetY){
  ctx.save();ctx.font='bold 10px system-ui';ctx.textAlign='center';
  if (portrait.matches) {
    [x,y] = [y,W-x];
    ctx.setTransform(canvas.width/H,0,0,canvas.height/W,0,0);
  }
+ y=clamp(y+offsetY,12,(portrait.matches?W:H)-6);
  const width=ctx.measureText(text).width+12;
  x=Math.max(width/2+3,Math.min((portrait.matches?H:W)-width/2-3,x));
  ctx.fillStyle='#102020e6';ctx.fillRect(x-width/2,y-11,width,16);
@@ -414,7 +422,7 @@ function drawNarrative(){
  if(rescue.phase!=='saved'){
  const m=rescue.medic,w=rescue.wounded;
  if(rescue.phase==='returning')drawWounded(m.x,m.y-29,true);
- else{drawWounded(w.x,w.y);nameplate(w.x,w.y-30,'FERIDO',rescue.team===0?'#69d8ff':'#ff9a72')}
+ else{drawWounded(w.x,w.y);nameplate(w.x,w.y,'FERIDO',rescue.team===0?'#69d8ff':'#ff9a72',-30)}
  if(rescue.phase!=='waiting'){
  ctx.save();ctx.translate(m.x,m.y);
  const step=Math.sin(time*13)*3;
@@ -425,7 +433,7 @@ function drawNarrative(){
  ctx.fillStyle='#d7b18a';ctx.beginPath();ctx.arc(0,-15,6,0,TAU);ctx.fill();
  ctx.fillStyle='#dcece2';ctx.fillRect(-7,-21,14,5);
  ctx.fillStyle='#35574c';ctx.fillRect(9,-1,9,11);ctx.restore();
- nameplate(m.x,m.y+(rescue.phase==='returning'?32:-30),'SOCORRISTA','#71efdc');
+ nameplate(m.x,m.y,'SOCORRISTA','#71efdc',rescue.phase==='returning'?32:-30);
  }
  }
  if(civilian){
@@ -441,9 +449,9 @@ function drawNarrative(){
  ctx.beginPath();ctx.moveTo(c.direction*7,-2);ctx.lineTo(c.direction*(28+Math.sin(time*6)*4),19);ctx.stroke();
  ctx.fillStyle='#e54e4e';ctx.beginPath();ctx.arc(c.direction*(28+Math.sin(time*6)*4),19,2,0,TAU);ctx.fill();
  ctx.restore();
- nameplate(c.x,c.y-39,'CIVIL · BENGALA BRANCA','#f3d36f');
+ nameplate(c.x,c.y,'CIVIL · BENGALA BRANCA','#f3d36f',-39);
  // Balão curto e legível também em telas menores.
- nameplate(c.x,c.y+35,c.quote,'#fff2bf');
+ nameplate(c.x,c.y,c.quote,'#fff2bf',35);
  }
 }
 
@@ -492,7 +500,7 @@ function resolveProjectiles(dt){
  used.add(e.index);
  if(e.type==='soldier'){t.alive=false;burst(t,12)}
  else{
- const damage = b.kind === 'soldier' ? 25 : mode === 'solo' ? 50 : 100;
+ const damage = b.kind === 'tank' && mode === 'auto' ? 100 : 25;
  t.hp=Math.max(0,t.hp-damage);
  t.hitUntil=time+.16;
  burst(t,t.hp===0?55:8);
@@ -619,7 +627,7 @@ function draw(){
  ctx.drawImage(terrain,0,0);
  if (mode === 'solo' && enemyLocked && phase !== 'over') {
    const t = tanks[1], dx = Math.cos(t.turret), dy = Math.sin(t.turret);
-   ctx.save(); ctx.strokeStyle='#ffd6a3';ctx.lineWidth=3;ctx.setLineDash([12,9]);
+   ctx.save(); ctx.strokeStyle='#ffb078';ctx.lineWidth=3;ctx.setLineDash([12,9]);ctx.lineDashOffset=-time*22;
    ctx.beginPath();ctx.moveTo(t.x+dx*33,t.y+dy*33);ctx.lineTo(t.x+dx*W*1.2,t.y+dy*W*1.2);ctx.stroke();ctx.restore();
  }
  // Reflexos seguem o tempo de simulação e param durante a pausa.
@@ -650,9 +658,11 @@ function changeText(element, value) {
   if (element.textContent !== value) element.textContent = value;
 }
 const hpLabels = [el('blueHp'), el('orangeHp')], hpBars = [el('blueBar'), el('orangeBar')];
+const infantryLabels = [el('blueSoldier'), el('orangeSoldier')];
 const clock = el('clock'), gunLabel = el('gunLabel');
 function updateHud() {
   tanks.forEach((tank,i) => {
+    changeText(infantryLabels[i],soldiers[i].alive ? 'Soldado ativo' : 'Soldado eliminado');
     const hp = tank.hp+'%';
     if (hpLabels[i].textContent !== hp || !hpBars[i].style.width) {
       hpLabels[i].textContent = hp;
