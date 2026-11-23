@@ -19,7 +19,7 @@ Criar, experimentar, aprender e voltar para mais uma partida.
 | Jogo | A experiência | Tecnologia | Estado |
 | :--- | :--- | :--- | :--- |
 | **[💣 Bomb Maze](games/bomb-maze/)** · [▶ Jogar agora](https://4l3xsgs.github.io/FunDrivenDev/games/bomb-maze/) | Arena arcade 16-bit com bombas, obstáculos destrutíveis, três inimigos e power-ups. | HTML5 Canvas · JavaScript | Jogável · v1.0 |
-| **[Duelo de Tanques](jogos/duelo-de-tanques/)** | Dois tanques em movimento aleatório. Um tiro a cada 1,5 segundo. O primeiro atingido perde. | HTML Canvas · JavaScript | Protótipo |
+| **[Duelo de Tanques](jogos/duelo-de-tanques/)** | Pilote o tanque azul por toque ou teclado, desvie dos tiros e enfrente o rival. Também inclui a simulação original. | HTML Canvas · JavaScript | Jogável · v0.6 |
 
 **Um conceito por vez. Uma experiência completa por jogo.**
 

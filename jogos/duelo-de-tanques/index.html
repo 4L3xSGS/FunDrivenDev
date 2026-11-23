@@ -1,47 +1,348 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="pt-BR">
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Duelo de Tanques</title>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#111a16">
+<title>Duelo de Tanques · Operação Riacho</title>
 <style>
-*{box-sizing:border-box}body{margin:0;background:radial-gradient(ellipse at top,#253b30,#101b19 75%);color:#e7eee8;font-family:system-ui;display:grid;place-items:center;min-height:100svh;padding:18px}main{width:min(850px,100%)}h1{margin:0;font-size:clamp(26px,5vw,42px)}p{color:#a6b4b0;line-height:1.5}.bar{display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;align-items:center;margin:18px 0}.badge{padding:10px 14px;background:#1e2930;border-radius:10px}canvas{display:block;width:100%;background:#567344;border:2px solid #8b9b62;box-shadow:0 24px 70px #0006;border-radius:14px}button{border:0;border-radius:9px;background:#dcf28b;color:#172214;padding:12px 18px;font:700 15px system-ui;cursor:pointer}button:focus-visible{outline:3px solid #69d8ff;outline-offset:4px}button:hover{filter:brightness(1.1)}#status{font-weight:700;color:#dcf28b}footer{font-size:13px;color:#93a29d;margin-top:12px}
+:root {
+  color-scheme: dark;
+  font-family: Barlow, "Arial", sans-serif;
+  --ink: #edf1df;
+  --muted: #bcc8b8;
+  --lime: #ddf593;
+  --line: #53634c;
+  --blue: #75d8ff;
+  --orange: #ffab79;
+}
+* { box-sizing: border-box }
+[hidden] { display: none !important }
+body {
+  margin: 0; min-height: 100svh; display: grid; place-items: center; color: var(--ink);
+  background-color: #111a16;
+  background-image: repeating-linear-gradient(0deg, transparent 0 23px, #8295720b 23px 24px),
+                    repeating-linear-gradient(90deg, transparent 0 23px, #8295720b 23px 24px);
+}
+button { font: inherit; color: inherit; cursor: pointer; touch-action: manipulation }
+button:focus-visible, [tabindex]:focus-visible { outline: 3px solid #a4eaff; outline-offset: 2px }
+button:disabled { cursor: default }
+.console {
+  width: min(100%, 1120px); height: min(850px, 100vh); height: min(850px, 100dvh);
+  min-height: 290px; display: grid; grid-template-rows: auto auto minmax(0,1fr) auto;
+  padding: max(8px, env(safe-area-inset-top)) max(12px, env(safe-area-inset-right))
+           max(8px, env(safe-area-inset-bottom)) max(12px, env(safe-area-inset-left));
+  gap: 8px;
+}
+header { display: flex; align-items: center; justify-content: space-between; gap: 8px }
+h1, h2, p { margin: 0 }
+h1, h2 { font-family: "Barlow Condensed", "Arial Narrow", system-ui, sans-serif; font-weight: 850; letter-spacing: -.055em; line-height: 1.05 }
+h1 { font-size: clamp(24px, 4vw, 42px) }
+.operation, .unit small, .timer, .control-label, .radio b {
+  font-family: "IBM Plex Mono", ui-monospace, monospace;
+  font-weight: 700; text-transform: uppercase; letter-spacing: .09em;
+}
+.operation { font-size: 10px; color: var(--lime); margin-bottom: 3px }
+.menu-button, .secondary {
+  min-height: 44px; padding: 0 14px; border: 1px solid var(--line); border-radius: 7px;
+  background: #26342b; font-weight: 700;
+}
+.menu-button:disabled { opacity: .44 }
+.hud {
+  display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; gap: clamp(10px,3vw,34px);
+  border-block: 1px solid var(--line); padding: 7px 0;
+}
+.unit { max-width: 330px; width: 100%; color: var(--blue) }
+.unit:last-child { color: var(--orange); justify-self: end }
+.unit-head { display: flex; align-items: baseline; justify-content: space-between; gap: 4px }
+.unit small { font-size: clamp(9px, 2.4vw, 12px); letter-spacing: .04em }
+.unit output, .timer { font: bold 12px/1.3 ui-monospace, monospace; font-variant-numeric: tabular-nums }
+.health { height: 5px; margin-top: 3px; background: #495543; overflow: hidden; border-radius: 2px }
+.health i { display: block; height: 100%; width: 100%; background: currentColor }
+.timer { color: var(--ink); letter-spacing: .03em }
+.battle {
+  min-height: 0; display: grid; grid-template-columns: minmax(78px,1fr) minmax(0,800px) minmax(78px,1fr);
+  grid-template-areas: "drive field gun"; gap: 8px; align-items: center;
+}
+.theater {
+  grid-area: field; width: 100%; height: 100%; min-height: 0;
+  display: grid; place-items: center; container-type: size;
+  background: repeating-linear-gradient(135deg,#25332926 0 1px,transparent 1px 7px);
+  border-radius: 6px;
+}
+.screen { width: min(100cqw, 160cqh); aspect-ratio: 8/5; position: relative }
+canvas { width: 100%; height: 100%; display: block; border-radius: 5px; background: #698552; outline: 1px solid #8da373 }
+.panel {
+  position: absolute; z-index: 1; inset: 0; display: grid; place-items: center;
+  padding: 6px; background: #101b1747; border-radius: 5px;
+}
+.menu {
+  width: min(100%, 292px); padding: clamp(10px,2.4vh,20px); border-radius: 9px;
+  background: #15221cf5; border: 1px solid #768767; box-shadow: 0 8px 28px #10191266;
+  text-align: center;
+}
+h2 { font-size: clamp(19px, 3.4vh, 30px) }
+.help { font-size: 13px; line-height: 1.35; color: #ced9c8; margin: 8px 0 12px }
+.choices { display: flex; justify-content: center; gap: 6px; flex-wrap: wrap }
+.primary, .secondary { min-height: 44px; border-radius: 5px; padding: 5px 12px; font-size: 14px; font-weight: 750 }
+.primary { color: #1c2919; background: var(--lime); border: 1px solid #efffbf }
+.station { align-self: center; justify-self: center; display: grid; place-items: center; gap: 5px; user-select: none; -webkit-user-select: none }
+.drive { grid-area: drive }
+.gun { grid-area: gun }
+.control-label { font-size: 10px; line-height: 1.2; color: var(--muted) }
+.stick, .trigger {
+  position: relative; border-radius: 50%; display: grid; place-items: center;
+  width: clamp(68px,9vw,104px); aspect-ratio: 1; touch-action: none; -webkit-tap-highlight-color: transparent;
+}
+.stick {
+  background: repeating-conic-gradient(from -1deg,#9dae842c 0 2deg,transparent 2deg 45deg), radial-gradient(circle,#28382b 0 60%,#1d291f 61%);
+  border: 2px solid #809377; box-shadow: inset 0 0 0 4px #253327;
+}
+.knob {
+  pointer-events: none; width: 45%; height: 45%; border-radius: 50%; border: 2px solid #90a57b;
+  background: radial-gradient(circle at 37% 30%,#74886a,#475c47 75%); box-shadow: 0 2px 6px #0b130b;
+}
+.trigger {
+  padding: 0; color: var(--lime); border: 2px solid #8c9d70;
+  background: radial-gradient(circle,#475c38 0 52%,#2d412c 53% 66%,#202d22 67%);
+}
+.trigger[aria-pressed="true"] { background: #516f40; box-shadow: inset 0 0 12px #1d301d }
+.trigger.reloading { color: #c1ccaa; border-color: #526448 }
+.reticle { position: relative; width: 27px; height: 27px; border: 2px solid currentColor; border-radius: 50%; pointer-events: none }
+.reticle::before, .reticle::after { content: ""; position: absolute; inset: 50% auto auto 50%; transform: translate(-50%,-50%); background: currentColor }
+.reticle::before { width: 35px; height: 2px }
+.reticle::after { width: 2px; height: 35px }
+.station.inactive { opacity: .45 }
+.radio { display: flex; align-items: baseline; gap: 9px; border-top: 1px solid var(--line); padding-top: 6px; min-height: 26px }
+.radio b { flex: none; font-size: 10px; color: var(--lime) }
+.radio p { color: var(--muted); font-size: 12px; line-height: 1.3 }
+@media (orientation: portrait) {
+  .battle { grid-template-columns: 1fr 1fr; grid-template-rows: minmax(0,1fr) auto; grid-template-areas: "field field" "drive gun" }
+  .screen { width: min(100cqw, 62.5cqh); aspect-ratio: 5/8 }
+  .station { width: min(100%,200px) }
+  .drive { justify-self: start }
+  .gun { justify-self: end }
+  .stick, .trigger { width: clamp(70px,11vh,96px) }
+  .radio { min-height: 33px }
+}
+@media (orientation: landscape) and (max-height: 500px) {
+  .console { gap: 4px; padding-top: max(3px,env(safe-area-inset-top)); padding-bottom: max(3px,env(safe-area-inset-bottom)) }
+  header { min-height: 44px }
+  .titles { display: flex; gap: 10px; align-items: baseline; flex-direction: row-reverse }
+  h1 { font-size: 23px }
+  .hud { padding-block: 3px }
+  .radio { padding-top: 3px; min-height: 20px }
+  .help { margin: 5px 0 8px }
+}
 </style>
-<main><h1>Duelo de Tanques</h1><p>Operação Riacho • Dois tanques e duas trincheiras em combate.</p>
-<div class="bar"><span class="badge" style="color:#69d8ff">● Tanque Azul</span><span id="clock">Próximo disparo: 1,5 s</span><span class="badge" style="color:#ff9a72">● Tanque Laranja</span></div>
-<canvas id="arena" width="800" height="500" aria-label="Arena de dois tanques com gramado, árvores e riacho atravessável"></canvas>
-<div class="bar"><span id="status" role="status" aria-live="polite">Partida em andamento</span><div><button id="pause">Pausar</button> <button id="restart">Nova partida</button></div></div>
-<p id="events" role="status" aria-live="polite" style="min-height:3em;color:#e6e5b7">Uma missão de resgate está prestes a começar.</p>
-<footer>Soldado: −25% por acerto • Tanque: destruição imediata • Saúde: 100% azul / 75% verde / 50% laranja / 25% vermelho • Civil, ferido e socorrista são personagens narrativos, sem dano</footer></main>
+</head>
+<body>
+<main class="console">
+  <header>
+    <div class="titles"><p class="operation">Operação Riacho</p><h1>Duelo de Tanques</h1></div>
+    <button id="pause" class="menu-button" disabled>Pausar</button>
+  </header>
+  <section class="hud" aria-label="Blindagem e tempo da rodada">
+    <div class="unit"><div class="unit-head"><small id="blueLabel">Tanque azul</small><output id="blueHp" aria-live="off">100%</output></div><div class="health"><i id="blueBar"></i></div></div>
+    <time class="timer" id="clock" aria-label="Tempo de partida">00:00</time>
+    <div class="unit"><div class="unit-head"><small>Tanque laranja</small><output id="orangeHp" aria-live="off">100%</output></div><div class="health"><i id="orangeBar"></i></div></div>
+  </section>
+  <div class="battle">
+    <div class="theater"><div class="screen">
+      <canvas id="arena" tabindex="-1" width="800" height="500" aria-label="Arena com dois tanques, trincheiras e um riacho"></canvas>
+      <section id="panel" class="panel" aria-labelledby="status">
+        <div class="menu"><h2 id="status" role="status">Escolha seu modo</h2>
+          <p id="help" class="help"></p>
+          <div class="choices"><button id="primary" class="primary">Pilotar o azul</button><button id="secondary" class="secondary">Assistir</button><button id="restart" class="secondary" hidden>Reiniciar</button></div>
+        </div>
+      </section>
+    </div></div>
+    <div class="station drive inactive"><div id="stick" class="stick" aria-label="Direcional de movimento" role="group"><span id="knob" class="knob"></span></div><span class="control-label" id="driveLabel">Mover</span></div>
+    <div class="station gun inactive"><button id="fire" class="trigger" aria-label="Disparar o canhão" aria-pressed="false" disabled><span class="reticle"></span></button><span id="gunLabel" class="control-label">Disparar</span></div>
+  </div>
+  <aside class="radio"><b>Rádio</b><p id="events" role="status"></p></aside>
+</main>
 <script>
-const canvas=document.querySelector('canvas'),ctx=canvas.getContext('2d');
-const status=document.querySelector('#status'),clock=document.querySelector('#clock');
-const pause=document.querySelector('#pause');
-const W=800,H=500,R=20,TAU=Math.PI*2,SHOT_INTERVAL=1.5;
-let civilian,rescue,nextCivilianAt,soldiers,tanks,bullets,particles,time,nextShot,over,paused,last;
-const randomAngle=()=>Math.random()*TAU;
-function reset(){
- tanks=[
- {x:145,y:250,a:randomAngle(),turret:0,color:'#69d8ff',name:'Azul',turn:0,hp:100},
- {x:655,y:250,a:randomAngle(),turret:Math.PI,color:'#ff9a72',name:'Laranja',turn:0,hp:100}
- ];
- soldiers=[{x:55,y:250,team:0,alive:true,aim:0},{x:745,y:250,team:1,alive:true,aim:Math.PI}];
- bullets=[];particles=[];time=0;nextShot=SHOT_INTERVAL;over=false;paused=false;
- status.textContent='Partida em andamento';pause.textContent='Pausar';pause.disabled=false;
- const team=Math.random()<.5?0:1;
- rescue={team,phase:'waiting',startAt:1+Math.random(),wait:0,
- medic:{x:soldiers[team].x,y:soldiers[team].y},
- wounded:{x:team===0?260:540,y:Math.random()<.5?165:335}};
- civilian=null;nextCivilianAt=.8+Math.random()*1.2;
- announce('Pedido de socorro: um soldado '+(team===0?'azul':'laranja')+' está ferido no campo.');
- last=performance.now();draw();
+const el = id => document.getElementById(id);
+const canvas = el('arena'), ctx = canvas.getContext('2d');
+const panel = el('panel'), pause = el('pause'), trigger = el('fire'), stick = el('stick');
+const portrait = matchMedia('(orientation: portrait)');
+const touchUI = matchMedia('(any-pointer: coarse)');
+const W = 800, H = 500, R = 20, TAU = 2 * Math.PI, SHOT_INTERVAL = 1.5;
+const STEP = 1 / 60, AIM_WARNING = .65, ENEMY_RELOAD = 2.2;
+const randomAngle = () => Math.random() * TAU;
+const clamp = (value, min, max) => Math.max(min, Math.min(max, value));
+const keys = new Set();
+const drive = { id: null, x: 0, y: 0 };
+let fireId = null;
+let civilian, rescue, nextCivilianAt, soldiers, tanks, bullets, particles;
+let time, nextShot, playerReady, enemyReady, enemyLocked, target, outcome;
+let mode = 'solo', phase = 'ready', last = null, remainder = 0, frame = null;
+
+function clearControls() {
+  keys.clear();
+  drive.id = fireId = null;
+  drive.x = drive.y = 0;
+  el('knob').style.transform = '';
+  trigger.setAttribute('aria-pressed', 'false');
 }
-function fire(t,i){
- // Faixa central: 40% a 60% da largura. Fora dela, mira no hemisfério oposto.
- const a=t.x<W*.4?(Math.random()-.5)*Math.PI:
- t.x>W*.6?Math.PI+(Math.random()-.5)*Math.PI:randomAngle();
- t.turret=a;
- bullets.push({x:t.x+Math.cos(a)*29,y:t.y+Math.sin(a)*29,vx:Math.cos(a)*260,vy:Math.sin(a)*260,owner:i,kind:'tank',radius:4});
+
+function resetRound() {
+  tanks = [
+    {x:145,y:250,a:0,turret:0,color:'#69d8ff',name:'Azul',turn:0,hp:100},
+    {x:655,y:250,a:Math.PI,turret:Math.PI,color:'#ff9a72',name:'Laranja',turn:0,hp:100}
+  ];
+  soldiers = [{x:55,y:250,team:0,alive:true,aim:0},{x:745,y:250,team:1,alive:true,aim:Math.PI}];
+  bullets = []; particles = []; time = 0; nextShot = SHOT_INTERVAL;
+  playerReady = 0; enemyReady = 2.6; enemyLocked = false; target = null;
+  const team = Math.random() < .5 ? 0 : 1;
+  rescue = {team, phase:'waiting', startAt:1+Math.random(), wait:0,
+    medic:{x:soldiers[team].x,y:soldiers[team].y},
+    wounded:{x:team===0?260:540,y:Math.random()<.5?165:335}};
+  civilian = null; nextCivilianAt = .8 + Math.random()*1.2;
 }
+
+function setPhase(next) {
+  phase = next;
+  clearControls();
+  last = null; remainder = 0;
+  const playing = phase === 'playing';
+  const pilot = playing && mode === 'solo';
+  panel.hidden = playing;
+  pause.disabled = !playing && phase !== 'paused';
+  pause.textContent = phase === 'paused' ? 'Continuar' : 'Pausar';
+  trigger.disabled = !pilot;
+  for (const station of document.querySelectorAll('.station')) station.classList.toggle('inactive', !pilot);
+  el('blueLabel').textContent = mode === 'solo' && phase !== 'ready' ? 'Você · azul' : 'Tanque azul';
+  el('driveLabel').textContent = touchUI.matches ? 'Mover' : 'Mover · WASD';
+  el('restart').hidden = phase !== 'paused';
+  if (!playing) {
+    const menu = {
+      ready: ['Escolha seu modo', touchUI.matches
+        ? 'Mova com o polegar esquerdo e dispare com o direito. A torre mira no rival.'
+        : 'Use WASD ou as setas para mover e espaço para disparar. A torre mira no rival.', 'Pilotar o azul', 'Assistir'],
+      paused: ['Jogo pausado', mode === 'solo' ? 'O traço laranja indica onde o rival vai atirar.' : 'Os dois tanques estão em modo automático.', 'Continuar', 'Modos'],
+      over: [outcome, 'Tempo de duelo · ' + formatTime(time), 'Jogar de novo', 'Modos']
+    }[phase];
+    [el('status').textContent, el('help').textContent, el('primary').textContent, el('secondary').textContent] = menu;
+    if (phase !== 'ready') el('primary').focus({preventScroll:true});
+  } else {
+    canvas.focus({preventScroll:true});
+  }
+  updateHud();
+  requestDraw();
+}
+
+function startRound(selected) {
+  mode = selected;
+  resetRound();
+  announce('Um soldado '+(rescue.team === 0 ? 'azul' : 'laranja')+' aguarda resgate.');
+  setPhase('playing');
+}
+function showModes() {
+  resetRound();
+  announce('Dois tanques e duas trincheiras em campo.');
+  setPhase('ready');
+}
+function togglePause() {
+  if (phase === 'playing') setPhase('paused');
+  else if (phase === 'paused') setPhase('playing');
+}
+
+function shoot(t, owner, angle) {
+  t.turret = angle;
+  t.flashUntil = time + .12;
+  const dx = Math.cos(angle), dy = Math.sin(angle);
+  bullets.push({x:t.x+dx*29, y:t.y+dy*29, vx:dx*260, vy:dy*260, owner, kind:'tank', radius:4});
+}
+function fire(t, i) {
+  const angle = t.x < W*.4 ? (Math.random()-.5)*Math.PI :
+    t.x > W*.6 ? Math.PI+(Math.random()-.5)*Math.PI : randomAngle();
+  shoot(t, i, angle);
+}
+function firePlayer() {
+  if (phase !== 'playing' || mode !== 'solo' || time + 1e-8 < playerReady) return;
+  shoot(tanks[0], 0, tanks[0].turret);
+  playerReady = time + SHOT_INTERVAL;
+}
+
+function moveRandom(t, dt) {
+  t.turn -= dt;
+  if (t.turn <= 0) { t.a = randomAngle(); t.turn = .5 + Math.random()*1.5 }
+  t.x += Math.cos(t.a)*75*dt;
+  t.y += Math.sin(t.a)*75*dt;
+  if (t.x < R || t.x > W-R) { t.x = clamp(t.x,R,W-R); t.a = Math.PI-t.a }
+  if (t.y < R || t.y > H-R) { t.y = clamp(t.y,R,H-R); t.a = -t.a }
+}
+
+function movePlayer(dt) {
+  let x = drive.x + Number(keys.has('ArrowRight') || keys.has('KeyD')) - Number(keys.has('ArrowLeft') || keys.has('KeyA'));
+  let y = drive.y + Number(keys.has('ArrowDown') || keys.has('KeyS')) - Number(keys.has('ArrowUp') || keys.has('KeyW'));
+  if (portrait.matches) [x,y] = [-y,x];
+  const length = Math.hypot(x,y);
+  if (length === 0) return;
+  const t = tanks[0], step = 152*dt/Math.max(1,length);
+  t.a = Math.atan2(y,x);
+  t.x = clamp(t.x+x*step,R,W-R); t.y = clamp(t.y+y*step,R,H-R);
+}
+
+function moveOpponent(dt) {
+  const [player, enemy] = tanks;
+  if (time < enemyReady - AIM_WARNING) {
+    if (!target || Math.hypot(enemy.x-target.x,enemy.y-target.y) < 3) {
+      const angle = Math.atan2(enemy.y-player.y,enemy.x-player.x) + (Math.random()<.5?-1:1)*(.5+Math.random()*.85);
+      const distance = 165+Math.random()*90;
+      target = {x:clamp(player.x+Math.cos(angle)*distance,50,W-50),
+                y:clamp(player.y+Math.sin(angle)*distance,50,H-50)};
+    }
+    enemy.a = Math.atan2(target.y-enemy.y,target.x-enemy.x);
+    walkTo(enemy,target,92,dt);
+  }
+  if (!enemyLocked) enemy.turret = Math.atan2(player.y-enemy.y,player.x-enemy.x);
+  if (time >= enemyReady-AIM_WARNING) enemyLocked = true;
+  if (time >= enemyReady) {
+    shoot(enemy,1,enemy.turret);
+    enemyReady = time+ENEMY_RELOAD; enemyLocked = false; target = null;
+  }
+}
+
+function update(dt) {
+  if (phase !== 'playing') return;
+  time += dt;
+  updateNarrative(dt);
+  const previous = tanks.map(t => ({x:t.x,y:t.y}));
+  if (mode === 'solo') { movePlayer(dt); moveOpponent(dt) }
+  else tanks.forEach(t => moveRandom(t,dt));
+  const dx = tanks[1].x-tanks[0].x, dy = tanks[1].y-tanks[0].y, distance = Math.hypot(dx,dy);
+  if (distance < 2*R) {
+    const nx = distance ? dx/distance : 1, ny = distance ? dy/distance : 0, push = (2*R-distance)/2;
+    tanks.forEach((t,i) => {
+      const sign = i ? 1 : -1;
+      t.x = clamp(t.x+sign*nx*push,R,W-R);
+      t.y = clamp(t.y+sign*ny*push,R,H-R);
+      if (mode === 'auto') t.a = randomAngle();
+    });
+  }
+  resolveRunovers(previous);
+  if (mode === 'solo') {
+    const [player, enemy] = tanks;
+    const lead = Math.min(.8, distance/260);
+    const aimX = clamp(enemy.x + (enemy.x-previous[1].x)*lead/dt,R,W-R);
+    const aimY = clamp(enemy.y + (enemy.y-previous[1].y)*lead/dt,R,H-R);
+    player.turret = Math.atan2(aimY-player.y,aimX-player.x);
+    if (fireId !== null || keys.has('Space')) firePlayer();
+  }
+  if (time + 1e-8 >= nextShot) {
+    if (mode === 'auto') tanks.forEach(fire);
+    soldiers.forEach(fireSoldier);
+    nextShot += SHOT_INTERVAL;
+  }
+  resolveProjectiles(dt);
+  if (phase === 'over') return;
+  bullets.forEach(b => { b.x+=b.vx*dt; b.y+=b.vy*dt });
+  bullets = bullets.filter(b => b.x>=0 && b.x<=W && b.y>=0 && b.y<=H);
+}
+
 function hitFraction(b,dt,t,targetRadius=R){
  const dx=b.vx*dt,dy=b.vy*dt,ox=b.x-t.x,oy=b.y-t.y;
  const A=dx*dx+dy*dy,B=2*(ox*dx+oy*dy),C=ox*ox+oy*oy-(targetRadius+(b.radius??4))**2;
@@ -49,32 +350,6 @@ function hitFraction(b,dt,t,targetRadius=R){
  const d=B*B-4*A*C;if(d<0)return Infinity;
  const s=(-B-Math.sqrt(d))/(2*A);return s>=0&&s<=1?s:Infinity;
 }
-function update(dt){
- if(paused||over)return;time+=dt;
- updateNarrative(dt);
- const previous=tanks.map(t=>({x:t.x,y:t.y}));
- tanks.forEach(t=>{
- t.turn-=dt;if(t.turn<=0){t.a=randomAngle();t.turn=.5+Math.random()*1.5}
- t.x+=Math.cos(t.a)*75*dt;t.y+=Math.sin(t.a)*75*dt;
- if(t.x<R||t.x>W-R){t.x=Math.max(R,Math.min(W-R,t.x));t.a=Math.PI-t.a}
- if(t.y<R||t.y>H-R){t.y=Math.max(R,Math.min(H-R,t.y));t.a=-t.a}
- });
- let dx=tanks[1].x-tanks[0].x,dy=tanks[1].y-tanks[0].y,distance=Math.hypot(dx,dy);
- if(distance<2*R){
- const nx=distance?dx/distance:1,ny=distance?dy/distance:0,push=(2*R-distance)/2;
- tanks.forEach((t,i)=>{const sign=i?1:-1;
- t.x=Math.max(R,Math.min(W-R,t.x+sign*nx*push));
- t.y=Math.max(R,Math.min(H-R,t.y+sign*ny*push));t.a=randomAngle()});
- }
- resolveRunovers(previous);
- while(time>=nextShot){tanks.forEach(fire);soldiers.forEach(fireSoldier);nextShot+=SHOT_INTERVAL}
- resolveProjectiles(dt);
- if(over)return;
- bullets.forEach(b=>{b.x+=b.vx*dt;b.y+=b.vy*dt});
- bullets=bullets.filter(b=>b.x>=0&&b.x<=W&&b.y>=0&&b.y<=H);
-}
-
-
 function announce(message){
  const el=document.querySelector('#events');
  if(el.textContent!==message)el.textContent=message;
@@ -113,8 +388,12 @@ function updateNarrative(dt){
 }
 function nameplate(x,y,text,color='#eaf5dc'){
  ctx.save();ctx.font='bold 10px system-ui';ctx.textAlign='center';
+ if (portrait.matches) {
+   [x,y] = [y,W-x];
+   ctx.setTransform(canvas.width/H,0,0,canvas.height/W,0,0);
+ }
  const width=ctx.measureText(text).width+12;
- x=Math.max(width/2+3,Math.min(W-width/2-3,x));
+ x=Math.max(width/2+3,Math.min((portrait.matches?H:W)-width/2-3,x));
  ctx.fillStyle='#102020e6';ctx.fillRect(x-width/2,y-11,width,16);
  ctx.fillStyle=color;ctx.fillText(text,x,y);ctx.restore();
 }
@@ -213,7 +492,9 @@ function resolveProjectiles(dt){
  used.add(e.index);
  if(e.type==='soldier'){t.alive=false;burst(t,12)}
  else{
- t.hp=Math.max(0,t.hp-(b.kind==='soldier'?25:100));
+ const damage = b.kind === 'soldier' ? 25 : mode === 'solo' ? 50 : 100;
+ t.hp=Math.max(0,t.hp-damage);
+ t.hitUntil=time+.16;
  burst(t,t.hp===0?55:8);
  if(t.hp===0)t.destroyed=true;
  }
@@ -221,9 +502,9 @@ function resolveProjectiles(dt){
  // Acertos no mesmo instante são processados antes de decidir o vencedor.
  const losers=tanks.map((t,n)=>t.hp===0?n:-1).filter(n=>n>=0);
  if(losers.length){
- over=true;pause.disabled=true;
- status.textContent=losers.length===2?'Empate! Os dois tanques foram destruídos.':
- 'Tanque '+tanks[1-losers[0]].name+' venceu!';
+ outcome = losers.length === 2 ? 'Empate!' : mode === 'auto' ? 'Tanque '+tanks[1-losers[0]].name+' venceu!' :
+   losers[0] === 1 ? 'Você venceu!' : 'Seu tanque foi destruído';
+ setPhase('over');
  break;
  }
  i=j;
@@ -234,13 +515,17 @@ function healthColor(hp){
  return hp>75?'#46b8ff':hp>50?'#79dc65':hp>25?'#ffac46':'#ff5959';
 }
 function healthBar(t){
- const x=Math.max(28,Math.min(W-28,t.x)),y=Math.max(23,t.y-39);
+ ctx.save();
+ const vertical = portrait.matches;
+ const width = vertical ? H : W, height = vertical ? W : H;
+ ctx.setTransform(canvas.width/width,0,0,canvas.height/height,0,0);
+ const x=clamp(vertical?t.y:t.x,28,width-28), y=Math.max(23,(vertical?W-t.x:t.y)-32);
  ctx.fillStyle='#101b20';ctx.fillRect(x-26,y-6,52,10);
  ctx.fillStyle=healthColor(t.hp);ctx.fillRect(x-24,y-4,48*t.hp/100,6);
  ctx.strokeStyle='#dce8cfaa';ctx.lineWidth=1;ctx.strokeRect(x-26,y-6,52,10);
  ctx.font='bold 10px system-ui';ctx.textAlign='center';
  ctx.fillStyle='#101b20';ctx.fillRect(x-19,y-20,38,12);
- ctx.fillStyle='#fff';ctx.fillText(t.hp+'%',x,y-10);
+ ctx.fillStyle='#fff';ctx.fillText(t.hp+'%',x,y-10);ctx.restore();
 }
 function trench(s){
  ctx.save();ctx.translate(s.x,s.y);
@@ -270,10 +555,11 @@ function tank(t){
  ctx.fillRect(-22,-21,44,11);ctx.fillRect(-22,10,44,11);
  ctx.strokeStyle='#53615e';ctx.lineWidth=2;
  for(let x=-17;x<22;x+=8){ctx.beginPath();ctx.moveTo(x,-20);ctx.lineTo(x,-11);ctx.moveTo(x,11);ctx.lineTo(x,20);ctx.stroke()}
- ctx.fillStyle=t.destroyed?'#50504a':t.color;ctx.fillRect(-19,-13,38,26);
+ ctx.fillStyle=t.destroyed?'#50504a':t.hitUntil>time?'#fff9d0':t.color;ctx.fillRect(-19,-13,38,26);
  ctx.fillStyle='#0003';ctx.fillRect(-15,-9,9,18);ctx.restore();
  ctx.save();ctx.translate(t.x,t.y);ctx.rotate(t.turret);
  ctx.fillStyle=t.destroyed?'#666456':t.color;ctx.fillRect(0,-4,32,8);
+ if(t.flashUntil>time){ctx.fillStyle='#ffe89e';ctx.beginPath();ctx.moveTo(30,-7);ctx.lineTo(49,0);ctx.lineTo(30,7);ctx.fill()}
  ctx.beginPath();ctx.arc(0,0,11,0,TAU);ctx.fill();
  ctx.fillStyle='#0004';ctx.beginPath();ctx.arc(-2,-2,5,0,TAU);ctx.fill();ctx.restore();
 }
@@ -328,7 +614,14 @@ function makeTerrain(){
 makeTerrain();
 
 function draw(){
- ctx.clearRect(0,0,W,H);ctx.drawImage(terrain,0,0);
+ if (portrait.matches) ctx.setTransform(0,-canvas.height/W,canvas.width/H,0,0,canvas.height);
+ else ctx.setTransform(canvas.width/W,0,0,canvas.height/H,0,0);
+ ctx.drawImage(terrain,0,0);
+ if (mode === 'solo' && enemyLocked && phase !== 'over') {
+   const t = tanks[1], dx = Math.cos(t.turret), dy = Math.sin(t.turret);
+   ctx.save(); ctx.strokeStyle='#ffd6a3';ctx.lineWidth=3;ctx.setLineDash([12,9]);
+   ctx.beginPath();ctx.moveTo(t.x+dx*33,t.y+dy*33);ctx.lineTo(t.x+dx*W*1.2,t.y+dy*W*1.2);ctx.stroke();ctx.restore();
+ }
  // Reflexos seguem o tempo de simulação e param durante a pausa.
  ctx.strokeStyle='#d7f8e64a';ctx.lineWidth=2;
  for(let n=0;n<17;n++){
@@ -337,25 +630,146 @@ function draw(){
  }
  soldiers.forEach(trench);
  tanks.forEach(tank);
- bullets.forEach(b=>{ctx.fillStyle=b.kind==='soldier'?'#ffda72':'#fff0ac';ctx.shadowColor='#ffcc55';ctx.shadowBlur=12;
- ctx.beginPath();ctx.arc(b.x,b.y,b.radius??4,0,TAU);ctx.fill();ctx.shadowBlur=0});
+ for (const b of bullets) {
+   const shell = b.kind === 'tank';
+   ctx.lineCap='round';ctx.lineWidth=shell?6:3;
+   ctx.strokeStyle=shell?(b.owner===0?'#3488ac':'#bf5d36'):'#684f2c';
+   ctx.beginPath();ctx.moveTo(b.x-b.vx*.05,b.y-b.vy*.05);ctx.lineTo(b.x,b.y);ctx.stroke();
+   ctx.fillStyle=shell?'#fff7cd':'#ffdc7a';
+   ctx.beginPath();ctx.arc(b.x,b.y,shell?5:3,0,TAU);ctx.fill();
+ }
  particles.forEach(p=>{ctx.globalAlpha=Math.min(1,p.life);ctx.fillStyle=p.life>.5?'#ffd86b':'#ed7445';ctx.fillRect(p.x-3,p.y-3,6,6)});
  ctx.globalAlpha=1;
  drawNarrative();
  tanks.forEach(healthBar);
- tanks.forEach((t,i)=>{
- const label='● Tanque '+t.name+' · '+t.hp+'% · Soldado '+(soldiers[i].alive?'ativo':'eliminado');
- const el=document.querySelectorAll('.badge')[i];if(el.textContent!==label)el.textContent=label;
- });
- clock.textContent=over?'Partida encerrada':'Próximo disparo: '+Math.max(0,nextShot-time).toFixed(1).replace('.',',')+' s';
 }
-function loop(now){
- const dt=Math.min((now-last)/1000,.05);last=now;update(dt);
- if(!paused){particles.forEach(p=>{p.x+=p.vx*dt;p.y+=p.vy*dt;p.life-=dt});particles=particles.filter(p=>p.life>0)}
- draw();requestAnimationFrame(loop);
+function formatTime(seconds) {
+  return String(Math.floor(seconds/60)).padStart(2,'0') + ':' + String(Math.floor(seconds)%60).padStart(2,'0');
 }
-pause.onclick=()=>{if(over)return;paused=!paused;pause.textContent=paused?'Continuar':'Pausar';status.textContent=paused?'Partida pausada':'Partida em andamento'};
-document.querySelector('#restart').onclick=reset;
-document.addEventListener('visibilitychange',()=>{if(document.hidden&&!over&&!paused)pause.click();last=performance.now()});
-reset();requestAnimationFrame(loop);
-</script></html>
+function changeText(element, value) {
+  if (element.textContent !== value) element.textContent = value;
+}
+const hpLabels = [el('blueHp'), el('orangeHp')], hpBars = [el('blueBar'), el('orangeBar')];
+const clock = el('clock'), gunLabel = el('gunLabel');
+function updateHud() {
+  tanks.forEach((tank,i) => {
+    const hp = tank.hp+'%';
+    if (hpLabels[i].textContent !== hp || !hpBars[i].style.width) {
+      hpLabels[i].textContent = hp;
+      hpBars[i].style.width = hp;
+      hpBars[i].style.backgroundColor = healthColor(tank.hp);
+    }
+  });
+  changeText(clock,formatTime(time));
+  const cooling = phase === 'playing' && mode === 'solo' && time < playerReady-1e-8;
+  trigger.classList.toggle('reloading',cooling);
+  changeText(gunLabel,cooling ? 'Recarga '+(playerReady-time).toFixed(1).replace('.',',')+' s' :
+    touchUI.matches ? 'Disparar' : 'Tiro · espaço');
+}
+
+function requestDraw() {
+  if (frame === null) frame = requestAnimationFrame(loop);
+}
+function loop(now) {
+  frame = null;
+  const dt = last === null ? 0 : Math.min((now-last)/1000,.1);
+  last = now;
+  if (phase === 'playing') {
+    remainder += dt;
+    while (phase === 'playing' && remainder >= STEP) {
+      remainder -= STEP;
+      update(STEP);
+    }
+  }
+  if (phase === 'playing' || phase === 'over') {
+    particles.forEach(p => { p.x+=p.vx*dt; p.y+=p.vy*dt; p.life-=dt });
+    particles = particles.filter(p => p.life>0);
+  }
+  draw(); updateHud();
+  if (phase === 'playing' || (phase === 'over' && particles.length)) requestDraw();
+}
+
+function resizeArena() {
+  const box = canvas.getBoundingClientRect(), scale = Math.min(window.devicePixelRatio || 1,2);
+  const width = Math.max(1,Math.round(box.width*scale)), height = Math.max(1,Math.round(box.height*scale));
+  if (width !== canvas.width || height !== canvas.height) { canvas.width = width; canvas.height = height }
+  requestDraw();
+}
+
+function moveStick(event) {
+  if (event.pointerId !== drive.id) return;
+  const box = stick.getBoundingClientRect(), radius = box.width*.32;
+  const x = (event.clientX-box.left-box.width/2)/radius, y = (event.clientY-box.top-box.height/2)/radius;
+  const length = Math.hypot(x,y), divisor = Math.max(1,length);
+  drive.x = length < .12 ? 0 : x/divisor;
+  drive.y = length < .12 ? 0 : y/divisor;
+  el('knob').style.transform = 'translate('+drive.x*radius+'px,'+drive.y*radius+'px)';
+}
+stick.addEventListener('pointerdown',event => {
+  if (phase !== 'playing' || mode !== 'solo' || drive.id !== null || event.button !== 0) return;
+  event.preventDefault();
+  drive.id = event.pointerId;
+  stick.setPointerCapture(drive.id);
+  moveStick(event);
+});
+stick.addEventListener('pointermove',moveStick);
+trigger.addEventListener('pointerdown',event => {
+  if (trigger.disabled || fireId !== null || event.button !== 0) return;
+  event.preventDefault();
+  fireId = event.pointerId;
+  trigger.setPointerCapture(fireId);
+  trigger.setAttribute('aria-pressed','true');
+  firePlayer();
+});
+function releasePointer(event) {
+  if (event.pointerId === drive.id) {
+    drive.id = null; drive.x = drive.y = 0;
+    el('knob').style.transform = '';
+  }
+  if (event.pointerId === fireId) {
+    fireId = null;
+    trigger.setAttribute('aria-pressed','false');
+  }
+}
+for (const control of [stick,trigger]) {
+  for (const type of ['pointerup','pointercancel','lostpointercapture']) control.addEventListener(type,releasePointer);
+  control.addEventListener('contextmenu',event => event.preventDefault());
+}
+trigger.addEventListener('click',event => { if (event.detail === 0) firePlayer() });
+
+const gameKeys = new Set(['ArrowUp','ArrowDown','ArrowLeft','ArrowRight','KeyW','KeyA','KeyS','KeyD','Space']);
+window.addEventListener('keydown',event => {
+  if (event.altKey || event.ctrlKey || event.metaKey) return;
+  if (event.code === 'Escape' || event.code === 'KeyP') {
+    if (!event.repeat) togglePause();
+    return;
+  }
+  if (phase !== 'playing' || mode !== 'solo' || !gameKeys.has(event.code)) return;
+  if (event.code === 'Space' && event.target.closest('button')) return;
+  event.preventDefault(); keys.add(event.code);
+  if (event.code === 'Space' && !event.repeat) firePlayer();
+});
+window.addEventListener('keyup',event => keys.delete(event.code));
+function interruptPlay() {
+  if (phase === 'playing') setPhase('paused');
+  else clearControls();
+}
+window.addEventListener('blur',interruptPlay);
+document.addEventListener('visibilitychange',() => { if (document.hidden) interruptPlay() });
+portrait.addEventListener('change',() => { clearControls(); resizeArena() });
+new ResizeObserver(resizeArena).observe(canvas);
+pause.addEventListener('click',togglePause);
+el('primary').addEventListener('click',() => {
+  if (phase === 'paused') setPhase('playing');
+  else startRound(phase === 'ready' ? 'solo' : mode);
+});
+el('secondary').addEventListener('click',() => {
+  if (phase === 'ready') startRound('auto');
+  else { showModes(); el('primary').focus({preventScroll:true}) }
+});
+el('restart').addEventListener('click',() => startRound(mode));
+showModes();
+resizeArena();
+</script>
+</body>
+</html>
