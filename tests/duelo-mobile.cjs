@@ -8,7 +8,9 @@ const game = pathToFileURL(path.resolve('jogos/duelo-de-tanques/index.html')).hr
 const catalog = pathToFileURL(path.resolve('index.html')).href;
 
 async function center(page, selector) {
-  const box = await page.locator(selector).boundingBox();
+  const target = page.locator(selector);
+  await target.evaluate(node => node.scrollIntoView({block:'nearest',inline:'nearest'}));
+  const box = await target.boundingBox();
   assert.ok(box, selector + ' deve estar visível');
   return { x: box.x + box.width/2, y: box.y + box.height/2 };
 }
@@ -33,11 +35,11 @@ async function mobileRound(browser) {
   const page = await context.newPage();
   const errors = [];
   page.on('pageerror', e => errors.push(e.message));
+  await page.goto(catalog);
+  await page.locator('a[href="jogos/duelo-de-tanques/index.html"]').tap();
+  await page.waitForURL(game);
   await page.clock.install({time:new Date('2026-01-01T00:00:00Z')});
   await page.clock.pauseAt(new Date('2026-01-01T00:00:01Z'));
-  await page.goto(catalog);
-  await tap(page,'a[href="jogos/duelo-de-tanques/index.html"]');
-  await page.waitForURL(game);
   await page.clock.runFor(32);
   const cdp = await context.newCDPSession(page);
   const touches = (type, touchPoints) => cdp.send('Input.dispatchTouchEvent',{type,touchPoints});
